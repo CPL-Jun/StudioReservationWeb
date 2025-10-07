@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予約管理 - スタジオ予約システム</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+        .nav a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        .nav a.active {
+            background-color: rgba(255,255,255,0.3);
+        }
+        .container {
+            padding: 15px;
+        }
+        .form-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-card h2 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 16px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        h2 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        /* カード形式の予約一覧（スマホ用） */
+        .reservation-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .reservation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .reservation-id {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+        .reservation-room {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        .reservation-info {
+            margin-bottom: 10px;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 80px;
+        }
+        .info-value {
+            color: #333;
+        }
+        .reservation-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-edit, .btn-delete {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-edit {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        /* デスクトップ用テーブル（768px以上） */
+        .table-container {
+            display: none;
+        }
+        
+        @media (min-width: 769px) {
+            .reservation-card {
+                display: none;
+            }
+            .table-container {
+                display: block;
+                overflow-x: auto;
+            }
+            table {
+                width: 100%;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            th, td {
+                padding: 15px;
+                text-align: left;
+            }
+            th {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                font-weight: 600;
+            }
+            tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+            .btn-sm {
+                padding: 6px 12px;
+                font-size: 14px;
+                margin-right: 5px;
+                border-radius: 5px;
+                text-decoration: none;
+                display: inline-block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📅 予約管理</h1>
+        <div class="nav">
+            <a th:href="@{/dashboard}">ホーム</a>
+            <a th:href="@{/manage}" class="active">予約管理</a>
+            <a th:href="@{/calendar/studio}">カレンダー</a>
+            <a th:href="@{/profile}">プロフィール</a>
+            <a th:href="@{/bbs}">掲示板</a>
+            <a th:href="@{/events}">イベント</a>
+            <a th:href="@{/logout}">ログアウト</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <h2>新規予約登録</h2>
+            <form th:action="@{/reservations}" method="post" th:object="${reservation}">
+                <div class="form-group">
+                    <label>部屋</label>
+                    <select th:field="*{room}" required>
+                        <option value="A">スタジオA</option>
+                        <option value="B">スタジオB</option>
+                        <option value="Hamajirushi">はまじるし</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>予約者名</label>
+                    <input type="text" th:field="*{name}" required />
+                </div>
+                <div class="form-group">
+                    <label>開始時刻</label>
+                    <input type="datetime-local" th:field="*{startTime}" required />
+                </div>
+                <div class="form-group">
+                    <label>終了時刻</label>
+                    <input type="datetime-local" th:field="*{endTime}" required />
+                </div>
+                <button type="submit">予約登録</button>
+            </form>
+        </div>
+
+        <h2>予約一覧</h2>
+        
+        <!-- スマホ用：カード形式 -->
+        <div class="reservation-card" th:each="r : ${reservations}">
+            <div class="reservation-header">
+                <span class="reservation-id">ID: <span th:text="${r.id}"></span></span>
+                <span class="reservation-room" th:text="${r.room}"></span>
+            </div>
+            <div class="reservation-info">
+                <div class="info-row">
+                    <span class="info-label">予約者:</span>
+                    <span class="info-value" th:text="${r.name}"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">開始:</span>
+                    <span class="info-value" th:text="${#temporals.format(r.startTime, 'MM/dd HH:mm')}"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">終了:</span>
+                    <span class="info-value" th:text="${#temporals.format(r.endTime, 'MM/dd HH:mm')}"></span>
+                </div>
+            </div>
+            <div class="reservation-actions">
+                <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-edit">編集</a>
+                <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="flex: 1; margin: 0;">
+                    <button type="submit" class="btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- デスクトップ用：テーブル形式 -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>部屋</th>
+                        <th>予約者</th>
+                        <th>開始時刻</th>
+                        <th>終了時刻</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${reservations}">
+                        <td th:text="${r.id}"></td>
+                        <td th:text="${r.room}"></td>
+                        <td th:text="${r.name}"></td>
+                        <td th:text="${#temporals.format(r.startTime, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${#temporals.format(r.endTime, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td>
+                            <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-sm btn-edit">編集</a>
+                            <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="display: inline;">
+                                <button type="submit" class="btn-sm btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダッシュボード - スタジオ予約システム</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+        .nav a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        .container {
+            padding: 15px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+        .card p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-size: 13px;
+        }
+        .card a {
+            display: inline-block;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: transform 0.2s;
+            font-size: 13px;
+        }
+        .card a:hover {
+            transform: scale(1.05);
+        }
+        @media (max-width: 480px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 18px;
+            }
+            h2 {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎸 スタジオ予約管理システム</h1>
+        <div class="nav">
+            <a th:href="@{/dashboard}">ホーム</a>
+            <a th:href="@{/manage}">予約管理</a>
+            <a th:href="@{/calendar/studio}">カレンダー</a>
+            <a th:href="@{/profile}">プロフィール</a>
+            <a th:href="@{/bbs}">掲示板</a>
+            <a th:href="@{/events}">イベント</a>
+            <a th:if="${isAdmin}" th:href="@{/admin}">管理画面</a>
+            <a th:href="@{/logout}">ログアウト</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>ようこそ、<span th:text="${user.displayName}"></span>さん！</h2>
+        
+        <div class="cards">
+            <div class="card">
+                <h3>📅 予約管理</h3>
+                <p>予約の作成・編集・削除</p>
+                <a th:href="@{/manage}">予約管理へ →</a>
+            </div>
+            
+            <div class="card">
+                <h3>📆 カレンダー</h3>
+                <p>予約状況を確認</p>
+                <a th:href="@{/calendar/studio}">カレンダーへ →</a>
+            </div>
+            
+            <div class="card">
+                <h3>👤 プロフィール</h3>
+                <p>プロフィール情報管理</p>
+                <a th:href="@{/profile}">プロフィールへ →</a>
+            </div>
+            
+            <div class="card">
+                <h3>💬 掲示板</h3>
+                <p>コピー曲募集掲示板</p>
+                <a th:href="@{/bbs}">掲示板へ →</a>
+            </div>
+            
+            <div class="card">
+                <h3>🎤 イベント</h3>
+                <p>イベント情報を確認</p>
+                <a th:href="@{/events}">イベント一覧へ →</a>
+            </div>
+            
+            <div class="card" th:if="${isAdmin}">
+                <h3>⚙️ 管理画面</h3>
+                <p>売上集計・管理機能</p>
+                <a th:href="@{/admin}">管理画面へ →</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

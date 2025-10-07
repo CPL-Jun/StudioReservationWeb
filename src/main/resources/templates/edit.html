@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予約編集 - スタジオ予約システム</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .form-card h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .btn-cancel {
+            background: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✏️ 予約編集</h1>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <h2>予約情報を編集</h2>
+            <form th:action="@{/reservations/{id}(id=${reservation.id})}" method="post" th:object="${reservation}">
+                <div class="form-group">
+                    <label>部屋</label>
+                    <select th:field="*{room}" required>
+                        <option value="A">スタジオA</option>
+                        <option value="B">スタジオB</option>
+                        <option value="Hamajirushi">はまじるし</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>予約者名</label>
+                    <input type="text" th:field="*{name}" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>開始時刻</label>
+                    <input type="datetime-local" th:field="*{startTime}" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>終了時刻</label>
+                    <input type="datetime-local" th:field="*{endTime}" required />
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit">更新</button>
+                    <a th:href="@{/manage}"><button type="button" class="btn-cancel">キャンセル</button></a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

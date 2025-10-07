@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roxetteカレンダー - スタジオ予約システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.15/index.global.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.15/index.global.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+        .nav a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        .nav a.active {
+            background-color: rgba(255,255,255,0.3);
+        }
+        .tabs {
+            display: flex;
+            background: white;
+            padding: 10px;
+            gap: 8px;
+            overflow-x: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tabs a {
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+            padding: 10px 15px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .tabs a:hover {
+            background: #e0e0e0;
+        }
+        .tabs a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .notice {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 15px;
+            border-radius: 5px;
+            color: #856404;
+            font-size: 14px;
+        }
+        .container {
+            padding: 15px;
+        }
+        #calendar {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 16px;
+            }
+            .nav {
+                font-size: 12px;
+            }
+            .nav a {
+                padding: 5px 8px;
+            }
+            .tabs a {
+                min-width: 80px;
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+            .notice {
+                font-size: 13px;
+                padding: 10px;
+                margin: 10px;
+            }
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎤 Roxetteカレンダー（閲覧のみ）</h1>
+        <div class="nav">
+            <a th:href="@{/dashboard}">ホーム</a>
+            <a th:href="@{/manage}">予約管理</a>
+            <a th:href="@{/calendar/roxette}" class="active">カレンダー</a>
+            <a th:href="@{/profile}">プロフィール</a>
+            <a th:href="@{/bbs}">掲示板</a>
+            <a th:href="@{/events}">イベント</a>
+            <a th:href="@{/logout}">ログアウト</a>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <a th:href="@{/calendar/studio}">🎸 スタジオ</a>
+        <a th:href="@{/calendar/hamajirushi}">🍴 はまじるし</a>
+        <a th:href="@{/calendar/roxette}" class="active">🎤 Roxette</a>
+    </div>
+
+    <div class="notice">
+        ⚠️ Roxetteは閲覧専用です。予約は管理者のみ可能です。
+    </div>
+
+    <div class="container">
+        <div id="calendar"></div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
+            locale: 'ja',
+            height: 'auto',
+            initialView: isMobile ? 'resourceTimeGridDay' : 'resourceTimeGridWeek',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: isMobile ? 'resourceTimeGridDay' : 'resourceTimeGridWeek,resourceTimeGridDay'
+            },
+            slotMinTime: '10:00:00',
+            slotMaxTime: '23:00:00',
+            slotDuration: '00:15:00',
+            nowIndicator: true,
+            editable: false,
+            selectable: false,
+            
+            resources: [
+                { id: 'Roxette', title: 'Roxette' }
+            ],
+            
+            events: function(fetchInfo, successCallback, failureCallback) {
+                fetch('/api/events')
+                    .then(r => r.json())
+                    .then(data => {
+                        const filtered = data.filter(e => e.resourceId === 'Roxette');
+                        successCallback(filtered);
+                    })
+                    .catch(err => failureCallback(err));
+            }
+        });
+
+        calendar.render();
+    });
+    </script>
+</body>
+</html>
