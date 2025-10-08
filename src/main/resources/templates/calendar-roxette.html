@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -71,12 +71,12 @@
             color: white;
         }
         .notice {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
             padding: 12px;
             margin: 15px;
             border-radius: 5px;
-            color: #856404;
+            color: #004085;
             font-size: 14px;
         }
         .container {
@@ -88,35 +88,130 @@
             padding: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        
+        /* モーダルスタイル */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            color: #667eea;
+            font-size: 22px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group .required {
+            color: red;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #999;
+            color: white;
+        }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .event-info {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .event-info p {
+            margin-bottom: 8px;
+            color: #666;
+        }
+        .event-info strong {
+            color: #333;
+        }
+        .time-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        /* FullCalendar空き枠スタイル */
+        .fc-event.slot-event {
+            background-color: #e0e0e0 !important;
+            border-color: #999 !important;
+            color: #666 !important;
+        }
+        
+        .fc-event.booked-event {
+            background-color: #a29bfe !important;
+            border-color: #8b7edc !important;
+        }
+        
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 16px;
+            .time-grid {
+                grid-template-columns: 1fr;
             }
-            .nav {
-                font-size: 12px;
-            }
-            .nav a {
-                padding: 5px 8px;
-            }
-            .tabs a {
-                min-width: 80px;
-                font-size: 12px;
-                padding: 8px 10px;
-            }
-            .notice {
-                font-size: 13px;
-                padding: 10px;
-                margin: 10px;
-            }
-            .container {
-                padding: 10px;
+            .modal-content {
+                margin: 10% auto;
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🎤 Roxetteカレンダー（閲覧のみ）</h1>
+        <h1>🎤 Roxetteライブスケジュール</h1>
         <div class="nav">
             <a th:href="@{/dashboard}">ホーム</a>
             <a th:href="@{/manage}">予約管理</a>
@@ -134,53 +229,461 @@
         <a th:href="@{/calendar/roxette}" class="active">🎤 Roxette</a>
     </div>
 
-    <div class="notice">
-        ⚠️ Roxetteは閲覧専用です。予約は管理者のみ可能です。
+    <div class="notice" sec:authorize="hasRole('ADMIN')">
+        🔑 管理者: 空き日をクリックして枠を作成できます。空き枠または登録済みライブをクリックで編集・削除できます。
+    </div>
+    
+    <div class="notice" sec:authorize="hasRole('USER') and !hasRole('ADMIN')">
+        ℹ️ 薄いグレーの空き枠をクリックしてライブ登録できます。登録済みのライブをクリックすると編集・削除できます。
     </div>
 
     <div class="container">
         <div id="calendar"></div>
     </div>
 
-    <script>
+    <!-- 管理者用：枠作成モーダル -->
+    <div id="slotModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="slotModalTitle">ライブ枠作成</h2>
+            </div>
+            <div class="event-info">
+                <p><strong>日付:</strong> <span id="slotDate"></span></p>
+            </div>
+            <form id="slotForm">
+                <input type="hidden" id="slotEventId">
+                <input type="hidden" id="slotDateValue">
+                
+                <div class="time-grid">
+                    <div class="form-group">
+                        <label>開始時間 <span class="required">*</span></label>
+                        <select id="slotStartTime" required>
+                            <!-- 30分単位で生成 -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>終了時間 <span class="required">*</span></label>
+                        <select id="slotEndTime" required>
+                            <!-- 30分単位で生成 -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="time-grid">
+                    <div class="form-group">
+                        <label>演奏時間（分） <span class="required">*</span></label>
+                        <input type="number" id="performanceTime" value="15" min="5" max="60" step="5" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>転換時間（分） <span class="required">*</span></label>
+                        <input type="number" id="changeoverTime" value="10" min="0" max="30" step="5" required>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">枠を作成</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeSlotModal()">キャンセル</button>
+                </div>
+                <div class="button-group" id="slotDeleteButtonGroup" style="display: none;">
+                    <button type="button" class="btn btn-danger" onclick="deleteSlot()">枠を削除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 一般ユーザー用：ライブ登録モーダル -->
+    <div id="liveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="liveModalTitle">ライブ登録</h2>
+            </div>
+            <div class="event-info" id="liveInfo">
+                <p><strong>日時:</strong> <span id="liveDateTime"></span></p>
+            </div>
+            <form id="liveForm">
+                <input type="hidden" id="liveEventId">
+                <input type="hidden" id="liveSlotId">
+                <input type="hidden" id="liveStart">
+                <input type="hidden" id="liveEnd">
+                
+                <div class="form-group">
+                    <label>代表者名 <span class="required">*</span></label>
+                    <input type="text" id="liveRepresentative" required placeholder="例: 山田太郎">
+                </div>
+                
+                <div class="form-group">
+                    <label>バンド名 <span class="required">*</span></label>
+                    <input type="text" id="liveBandName" required placeholder="例: The Rockers">
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeLiveModal()">キャンセル</button>
+                </div>
+                <div class="button-group" id="liveDeleteButtonGroup" style="display: none;">
+                    <button type="button" class="btn btn-danger" onclick="deleteLive()">削除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    let calendar;
+    let isAdmin = /*[[${#authorization.expression('hasRole(''ADMIN'')')}]]*/ false;
+    
     document.addEventListener('DOMContentLoaded', function() {
         const calendarEl = document.getElementById('calendar');
-        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        
+        // 時間選択肢を生成（30分単位）
+        generateTimeOptions();
 
-        const calendar = new FullCalendar.Calendar(calendarEl, {
+        calendar = new FullCalendar.Calendar(calendarEl, {
             schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
             locale: 'ja',
             height: 'auto',
-            initialView: isMobile ? 'resourceTimeGridDay' : 'resourceTimeGridWeek',
+            initialView: 'dayGridMonth',
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
-                right: isMobile ? 'resourceTimeGridDay' : 'resourceTimeGridWeek,resourceTimeGridDay'
+                right: ''
             },
-            slotMinTime: '10:00:00',
-            slotMaxTime: '23:00:00',
-            slotDuration: '00:15:00',
             nowIndicator: true,
             editable: false,
             selectable: false,
-            
-            resources: [
-                { id: 'Roxette', title: 'Roxette' }
-            ],
             
             events: function(fetchInfo, successCallback, failureCallback) {
                 fetch('/api/events')
                     .then(r => r.json())
                     .then(data => {
                         const filtered = data.filter(e => e.resourceId === 'Roxette');
+                        
+                        // イベントにクラスを追加
+                        filtered.forEach(e => {
+                            if (e.isSlot) {
+                                e.className = 'slot-event';
+                            } else {
+                                e.className = 'booked-event';
+                            }
+                        });
+                        
                         successCallback(filtered);
                     })
                     .catch(err => failureCallback(err));
+            },
+            
+            dateClick: function(info) {
+                if (isAdmin) {
+                    // 管理者：枠作成モーダルを開く
+                    openSlotModal(null, info.dateStr);
+                }
+            },
+            
+            eventClick: function(info) {
+                const event = info.event;
+                const isSlot = event.extendedProps.isSlot;
+                
+                if (isAdmin) {
+                    // 管理者：枠または登録済みライブを編集
+                    if (isSlot) {
+                        openSlotModal(event);
+                    } else {
+                        openLiveModal(event);
+                    }
+                } else {
+                    // 一般ユーザー
+                    if (isSlot) {
+                        // 空き枠：ライブ登録
+                        openLiveModal(event, true);
+                    } else {
+                        // 登録済みライブ：編集
+                        openLiveModal(event, false);
+                    }
+                }
             }
         });
 
         calendar.render();
+        
+        // フォーム送信
+        document.getElementById('slotForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveSlot();
+        });
+        
+        document.getElementById('liveForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveLive();
+        });
     });
+    
+    function generateTimeOptions() {
+        const startSelect = document.getElementById('slotStartTime');
+        const endSelect = document.getElementById('slotEndTime');
+        
+        for (let h = 10; h <= 23; h++) {
+            for (let m of [0, 30]) {
+                if (h === 23 && m === 30) break;
+                const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                
+                const optionStart = document.createElement('option');
+                optionStart.value = time;
+                optionStart.textContent = time;
+                startSelect.appendChild(optionStart);
+                
+                const optionEnd = document.createElement('option');
+                optionEnd.value = time;
+                optionEnd.textContent = time;
+                endSelect.appendChild(optionEnd);
+            }
+        }
+        
+        // デフォルト値設定
+        startSelect.value = '19:00';
+        endSelect.value = '22:00';
+    }
+    
+    // 管理者用：枠作成モーダル
+    function openSlotModal(event, dateStr = null) {
+        const modal = document.getElementById('slotModal');
+        modal.style.display = 'block';
+        
+        if (event) {
+            // 編集モード
+            document.getElementById('slotModalTitle').textContent = '枠編集';
+            document.getElementById('slotEventId').value = event.id;
+            document.getElementById('slotDate').textContent = 
+                new Date(event.start).toLocaleDateString('ja-JP');
+            
+            const start = new Date(event.start);
+            const end = new Date(event.end);
+            
+            document.getElementById('slotStartTime').value = 
+                `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`;
+            document.getElementById('slotEndTime').value = 
+                `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
+            
+            document.getElementById('performanceTime').value = event.extendedProps.performanceTime || 15;
+            document.getElementById('changeoverTime').value = event.extendedProps.changeoverTime || 10;
+            document.getElementById('slotDateValue').value = event.startStr.split('T')[0];
+            
+            document.getElementById('slotDeleteButtonGroup').style.display = 'flex';
+        } else {
+            // 新規作成モード
+            document.getElementById('slotModalTitle').textContent = 'ライブ枠作成';
+            document.getElementById('slotEventId').value = '';
+            document.getElementById('slotDate').textContent = 
+                new Date(dateStr).toLocaleDateString('ja-JP');
+            document.getElementById('slotDateValue').value = dateStr;
+            
+            document.getElementById('slotStartTime').value = '19:00';
+            document.getElementById('slotEndTime').value = '22:00';
+            document.getElementById('performanceTime').value = 15;
+            document.getElementById('changeoverTime').value = 10;
+            
+            document.getElementById('slotDeleteButtonGroup').style.display = 'none';
+        }
+    }
+    
+    function closeSlotModal() {
+        document.getElementById('slotModal').style.display = 'none';
+    }
+    
+    function saveSlot() {
+        const eventId = document.getElementById('slotEventId').value;
+        const dateStr = document.getElementById('slotDateValue').value;
+        const startTime = document.getElementById('slotStartTime').value;
+        const endTime = document.getElementById('slotEndTime').value;
+        const performanceTime = parseInt(document.getElementById('performanceTime').value);
+        const changeoverTime = parseInt(document.getElementById('changeoverTime').value);
+        
+        const startDateTime = dateStr + 'T' + startTime + ':00';
+        const endDateTime = dateStr + 'T' + endTime + ':00';
+        
+        const data = {
+            resourceId: 'Roxette',
+            name: '空き枠',
+            start: startDateTime,
+            end: endDateTime,
+            isSlot: true,
+            performanceTime: performanceTime,
+            changeoverTime: changeoverTime
+        };
+        
+        const url = eventId ? '/api/events/' + eventId : '/api/events';
+        const method = eventId ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'ok') {
+                calendar.refetchEvents();
+                closeSlotModal();
+            } else {
+                alert('保存に失敗しました');
+            }
+        })
+        .catch(error => {
+            alert('エラーが発生しました');
+            console.error(error);
+        });
+    }
+    
+    function deleteSlot() {
+        const eventId = document.getElementById('slotEventId').value;
+        
+        if (!confirm('この枠を削除しますか？（関連するライブも削除されます）')) {
+            return;
+        }
+        
+        fetch('/api/events/' + eventId, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'ok') {
+                calendar.refetchEvents();
+                closeSlotModal();
+            } else {
+                alert('削除に失敗しました');
+            }
+        })
+        .catch(error => {
+            alert('エラーが発生しました');
+            console.error(error);
+        });
+    }
+    
+    // 一般ユーザー用：ライブ登録モーダル
+    function openLiveModal(event, isNewRegistration = false) {
+        const modal = document.getElementById('liveModal');
+        modal.style.display = 'block';
+        
+        if (isNewRegistration) {
+            // 空き枠に新規登録
+            document.getElementById('liveModalTitle').textContent = 'ライブ登録';
+            document.getElementById('liveEventId').value = '';
+            document.getElementById('liveSlotId').value = event.id;
+            document.getElementById('liveStart').value = event.startStr;
+            document.getElementById('liveEnd').value = event.endStr;
+            
+            document.getElementById('liveDateTime').textContent = 
+                new Date(event.start).toLocaleString('ja-JP') + ' - ' +
+                new Date(event.end).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+            
+            document.getElementById('liveRepresentative').value = '';
+            document.getElementById('liveBandName').value = '';
+            
+            document.getElementById('liveDeleteButtonGroup').style.display = 'none';
+        } else {
+            // 既存ライブ編集
+            document.getElementById('liveModalTitle').textContent = 'ライブ編集';
+            document.getElementById('liveEventId').value = event.id;
+            document.getElementById('liveSlotId').value = event.extendedProps.slotId || '';
+            document.getElementById('liveStart').value = event.startStr;
+            document.getElementById('liveEnd').value = event.endStr;
+            
+            document.getElementById('liveDateTime').textContent = 
+                new Date(event.start).toLocaleString('ja-JP') + ' - ' +
+                new Date(event.end).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+            
+            document.getElementById('liveRepresentative').value = event.extendedProps.representative || '';
+            document.getElementById('liveBandName').value = event.extendedProps.bandName || '';
+            
+            document.getElementById('liveDeleteButtonGroup').style.display = 'flex';
+        }
+    }
+    
+    function closeLiveModal() {
+        document.getElementById('liveModal').style.display = 'none';
+    }
+    
+    function saveLive() {
+        const eventId = document.getElementById('liveEventId').value;
+        const slotId = document.getElementById('liveSlotId').value;
+        const representative = document.getElementById('liveRepresentative').value;
+        const bandName = document.getElementById('liveBandName').value;
+        const startTime = document.getElementById('liveStart').value;
+        const endTime = document.getElementById('liveEnd').value;
+        
+        if (!representative || !bandName) {
+            alert('代表者名とバンド名を入力してください');
+            return;
+        }
+        
+        const data = {
+            resourceId: 'Roxette',
+            name: bandName + ' (代表: ' + representative + ')',
+            start: startTime,
+            end: endTime,
+            representative: representative,
+            bandName: bandName,
+            slotId: slotId ? parseInt(slotId) : null,
+            isSlot: false
+        };
+        
+        const url = eventId ? '/api/events/' + eventId : '/api/events';
+        const method = eventId ? 'PUT' : 'POST';
+        
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'ok') {
+                calendar.refetchEvents();
+                closeLiveModal();
+            } else {
+                alert('保存に失敗しました');
+            }
+        })
+        .catch(error => {
+            alert('エラーが発生しました');
+            console.error(error);
+        });
+    }
+    
+    function deleteLive() {
+        const eventId = document.getElementById('liveEventId').value;
+        
+        if (!confirm('このライブを削除しますか？')) {
+            return;
+        }
+        
+        fetch('/api/events/' + eventId, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.status === 'ok') {
+                calendar.refetchEvents();
+                closeLiveModal();
+            } else {
+                alert('削除に失敗しました');
+            }
+        })
+        .catch(error => {
+            alert('エラーが発生しました');
+            console.error(error);
+        });
+    }
+    
+    // モーダル外クリックで閉じる
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            closeSlotModal();
+            closeLiveModal();
+        }
+    }
+    /*]]>*/
     </script>
 </body>
 </html>

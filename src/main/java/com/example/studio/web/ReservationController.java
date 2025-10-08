@@ -42,11 +42,9 @@ public class ReservationController {
         model.addAttribute("reservations", repo.findAll());
         model.addAttribute("profiles", profileRepo.findAll());
         
-        // ユーザーの表示名リストを追加
         List<AppUser> users = appUserRepo.findAll();
         model.addAttribute("users", users);
         
-        // 現在のユーザーの表示名をデフォルト値として設定
         AppUser currentUser = userService.getCurrentUser();
         Reservation reservation = new Reservation();
         if (currentUser != null) {
@@ -79,7 +77,6 @@ public class ReservationController {
         Reservation reservation = repo.findById(id);
         model.addAttribute("reservation", reservation);
         
-        // ユーザーの表示名リストを追加
         List<AppUser> users = appUserRepo.findAll();
         model.addAttribute("users", users);
         
@@ -98,19 +95,16 @@ public class ReservationController {
         return "redirect:/manage";
     }
 
-    // スタジオカレンダー（24時間）
     @GetMapping("/calendar/studio")
     public String calendarStudio() {
         return "calendar-studio";
     }
 
-    // Roxetteカレンダー（閲覧のみ）
     @GetMapping("/calendar/roxette")
     public String calendarRoxette() {
-        return "calendar-livehouse";
+        return "calendar-roxette";
     }
 
-    // 旧カレンダー（リダイレクト）
     @GetMapping("/calendar")
     public String calendar() {
         return "redirect:/calendar/studio";
@@ -139,11 +133,29 @@ public class ReservationController {
             event.put("end", res.getEndTime().toString());
             event.put("resourceId", res.getRoom());
             
+            // 枠管理用フィールド
+            event.put("isSlot", res.getIsSlot() != null && res.getIsSlot());
+            event.put("performanceTime", res.getPerformanceTime());
+            event.put("changeoverTime", res.getChangeoverTime());
+            event.put("slotId", res.getSlotId());
+            
+            // Roxette用の拡張プロパティ
+            if (res.getRepresentative() != null || res.getBandName() != null) {
+                event.put("representative", res.getRepresentative());
+                event.put("bandName", res.getBandName());
+            }
+            
             String color = "#3788d8";
             if ("A".equals(res.getRoom())) color = "#ff6b6b";
             else if ("B".equals(res.getRoom())) color = "#4ecdc4";
             else if ("Hamajirushi".equals(res.getRoom())) color = "#f7b731";
-            else if ("Roxette".equals(res.getRoom())) color = "#a29bfe";
+            else if ("Roxette".equals(res.getRoom())) {
+                if (res.getIsSlot() != null && res.getIsSlot()) {
+                    color = "#e0e0e0"; // 空き枠は薄いグレー
+                } else {
+                    color = "#a29bfe"; // 予約済みは紫
+                }
+            }
             event.put("color", color);
             
             events.add(event);
@@ -153,13 +165,34 @@ public class ReservationController {
 
     @PostMapping("/api/events")
     @ResponseBody
-    public Map<String, Object> createEvent(@RequestBody Map<String, String> payload) {
+    public Map<String, Object> createEvent(@RequestBody Map<String, Object> payload) {
         Reservation reservation = new Reservation();
-        reservation.setRoom(payload.get("resourceId"));
-        reservation.setName(payload.get("name"));
-        reservation.setStartTime(LocalDateTime.parse(payload.get("start")));
-        reservation.setEndTime(LocalDateTime.parse(payload.get("end")));
-        reservation.setVenue(getVenueFromRoom(payload.get("resourceId")));
+        reservation.setRoom((String) payload.get("resourceId"));
+        reservation.setName((String) payload.get("name"));
+        reservation.setStartTime(LocalDateTime.parse((String) payload.get("start")));
+        reservation.setEndTime(LocalDateTime.parse((String) payload.get("end")));
+        reservation.setVenue(getVenueFromRoom((String) payload.get("resourceId")));
+        
+        // 枠作成の場合
+        if (payload.containsKey("isSlot") && (Boolean) payload.get("isSlot")) {
+            reservation.setIsSlot(true);
+            reservation.setPerformanceTime((Integer) payload.get("performanceTime"));
+            reservation.setChangeoverTime((Integer) payload.get("changeoverTime"));
+        }
+        
+        // ライブ登録の場合
+        if (payload.containsKey("representative")) {
+            reservation.setRepresentative((String) payload.get("representative"));
+        }
+        if (payload.containsKey("bandName")) {
+            reservation.setBandName((String) payload.get("bandName"));
+        }
+        if (payload.containsKey("slotId")) {
+            Object slotIdObj = payload.get("slotId");
+            if (slotIdObj instanceof Number) {
+                reservation.setSlotId(((Number) slotIdObj).longValue());
+            }
+        }
         
         repo.insert(reservation);
         calendarSync.syncReservation(reservation);
@@ -172,14 +205,39 @@ public class ReservationController {
     @PutMapping("/api/events/{id}")
     @ResponseBody
     public Map<String, Object> updateEvent(@PathVariable Long id, 
-                                          @RequestBody Map<String, String> payload) {
+                                          @RequestBody Map<String, Object> payload) {
         Reservation reservation = repo.findById(id);
         if (reservation != null) {
-            reservation.setStartTime(LocalDateTime.parse(payload.get("start")));
-            reservation.setEndTime(LocalDateTime.parse(payload.get("end")));
-            if (payload.containsKey("resourceId")) {
-                reservation.setRoom(payload.get("resourceId"));
+            if (payload.containsKey("start")) {
+                reservation.setStartTime(LocalDateTime.parse((String) payload.get("start")));
             }
+            if (payload.containsKey("end")) {
+                reservation.setEndTime(LocalDateTime.parse((String) payload.get("end")));
+            }
+            
+            if (payload.containsKey("resourceId")) {
+                reservation.setRoom((String) payload.get("resourceId"));
+            }
+            
+            // 枠情報更新
+            if (payload.containsKey("performanceTime")) {
+                reservation.setPerformanceTime((Integer) payload.get("performanceTime"));
+            }
+            if (payload.containsKey("changeoverTime")) {
+                reservation.setChangeoverTime((Integer) payload.get("changeoverTime"));
+            }
+            
+            // Roxette用のフィールド更新
+            if (payload.containsKey("representative")) {
+                reservation.setRepresentative((String) payload.get("representative"));
+            }
+            if (payload.containsKey("bandName")) {
+                reservation.setBandName((String) payload.get("bandName"));
+            }
+            if (payload.containsKey("name")) {
+                reservation.setName((String) payload.get("name"));
+            }
+            
             repo.update(reservation);
             calendarSync.updateReservation(reservation);
         }

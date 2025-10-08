@@ -29,6 +29,27 @@ public class ReservationRepository {
             r.setStartTime(LocalDateTime.parse(rs.getString("start_time")));
             r.setEndTime(LocalDateTime.parse(rs.getString("end_time")));
             r.setName(rs.getString("name"));
+            r.setRepresentative(rs.getString("representative"));
+            r.setBandName(rs.getString("band_name"));
+            
+            int isSlot = rs.getInt("is_slot");
+            r.setIsSlot(isSlot == 1);
+            
+            int performanceTime = rs.getInt("performance_time");
+            if (!rs.wasNull()) {
+                r.setPerformanceTime(performanceTime);
+            }
+            
+            int changeoverTime = rs.getInt("changeover_time");
+            if (!rs.wasNull()) {
+                r.setChangeoverTime(changeoverTime);
+            }
+            
+            long slotId = rs.getLong("slot_id");
+            if (!rs.wasNull()) {
+                r.setSlotId(slotId);
+            }
+            
             return r;
         }
     };
@@ -57,23 +78,35 @@ public class ReservationRepository {
 
     public void insert(Reservation reservation) {
         jdbc.update(
-            "INSERT INTO reservations (venue, room, start_time, end_time, name) VALUES (?, ?, ?, ?, ?)",
-            reservation.getVenue(),
-            reservation.getRoom(),
-            reservation.getStartTime().toString(),
-            reservation.getEndTime().toString(),
-            reservation.getName()
-        );
-    }
-
-    public void update(Reservation reservation) {
-        jdbc.update(
-            "UPDATE reservations SET venue = ?, room = ?, start_time = ?, end_time = ?, name = ? WHERE id = ?",
+            "INSERT INTO reservations (venue, room, start_time, end_time, name, representative, band_name, is_slot, performance_time, changeover_time, slot_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             reservation.getVenue(),
             reservation.getRoom(),
             reservation.getStartTime().toString(),
             reservation.getEndTime().toString(),
             reservation.getName(),
+            reservation.getRepresentative(),
+            reservation.getBandName(),
+            reservation.getIsSlot() != null && reservation.getIsSlot() ? 1 : 0,
+            reservation.getPerformanceTime(),
+            reservation.getChangeoverTime(),
+            reservation.getSlotId()
+        );
+    }
+
+    public void update(Reservation reservation) {
+        jdbc.update(
+            "UPDATE reservations SET venue = ?, room = ?, start_time = ?, end_time = ?, name = ?, representative = ?, band_name = ?, is_slot = ?, performance_time = ?, changeover_time = ?, slot_id = ? WHERE id = ?",
+            reservation.getVenue(),
+            reservation.getRoom(),
+            reservation.getStartTime().toString(),
+            reservation.getEndTime().toString(),
+            reservation.getName(),
+            reservation.getRepresentative(),
+            reservation.getBandName(),
+            reservation.getIsSlot() != null && reservation.getIsSlot() ? 1 : 0,
+            reservation.getPerformanceTime(),
+            reservation.getChangeoverTime(),
+            reservation.getSlotId(),
             reservation.getId()
         );
     }

@@ -1,99 +1,122 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>参加者一覧 - はまじるし</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f5f5;
         }
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
         .header h1 {
             font-size: 24px;
             margin-bottom: 10px;
         }
+
         .back-link {
             display: inline-block;
             color: white;
             text-decoration: none;
             padding: 8px 15px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 5px;
             margin-top: 10px;
         }
+
         .back-link:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.3);
         }
+
         .container {
             max-width: 900px;
             margin: 30px auto;
             padding: 0 20px;
         }
+
         .date-header {
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             text-align: center;
         }
+
         .date-header h2 {
             color: #667eea;
             font-size: 28px;
             margin-bottom: 5px;
         }
+
         .participant-count {
             color: #666;
             font-size: 16px;
         }
+
         .participants-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
         }
+
         .participant-card {
             background: white;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s, box-shadow 0.3s;
         }
+
         .participant-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+
         .participant-header {
             margin-bottom: 15px;
             padding-bottom: 12px;
             border-bottom: 2px solid #f0f0f0;
         }
+
         .participant-name {
             font-size: 20px;
             font-weight: 600;
             color: #667eea;
             margin-bottom: 5px;
         }
+
         .participant-email {
             font-size: 13px;
             color: #999;
         }
+
         .participant-detail {
             margin-bottom: 12px;
         }
+
         .detail-title {
             font-size: 13px;
             font-weight: 600;
             color: #667eea;
             margin-bottom: 6px;
         }
+
         .badge {
             display: inline-block;
             padding: 4px 10px;
@@ -104,6 +127,7 @@
             margin-right: 5px;
             margin-bottom: 5px;
         }
+
         .participant-comment {
             background: #f9f9f9;
             padding: 12px;
@@ -114,6 +138,7 @@
             font-size: 14px;
             color: #555;
         }
+
         .no-profile {
             color: #999;
             font-style: italic;
@@ -123,6 +148,7 @@
             background: #f9f9f9;
             border-radius: 5px;
         }
+
         .empty-message {
             text-align: center;
             padding: 60px 20px;
@@ -130,12 +156,14 @@
             border-radius: 10px;
             color: #999;
         }
+
         .empty-message h3 {
             font-size: 20px;
             margin-bottom: 10px;
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>🍴 はまじるし参加者</h1>
@@ -144,10 +172,10 @@
 
     <div class="container">
         <div class="date-header">
-            <h2 th:text="${#temporals.format(date, 'yyyy年M月d日(E)', 'ja')}">2025年10月8日(水)</h2>
-            <div class="participant-count">
-                <span th:text="${#lists.size(participants)}">0</span>人が参加予定
-            </div>
+            <h2 th:text="${#temporals.format(date, 'yyyy年M月d日(E)')}">
+                <div class="participant-count">
+                    <span th:text="${#lists.size(participants)}">0</span>人が参加予定
+                </div>
         </div>
 
         <div class="participants-grid" th:if="${!#lists.isEmpty(participants)}">
@@ -156,38 +184,50 @@
                     <div class="participant-name" th:text="${participant.userName}">ユーザー名</div>
                     <div class="participant-email" th:text="${participant.userEmail}">email</div>
                 </div>
-                
+
                 <div th:if="${profiles[participant.userId] != null}">
-                    <div class="participant-detail" th:if="${profiles[participant.userId].mainInstrument != null and profiles[participant.userId].mainInstrument != ''}">
+                    <div class="participant-detail"
+                        th:if="${profiles[participant.userId].mainInstrument != null and profiles[participant.userId].mainInstrument != ''}">
                         <div class="detail-title">🎸 メインパート</div>
                         <span class="badge" th:text="${profiles[participant.userId].mainInstrument}"></span>
                     </div>
-                    
-                    <div class="participant-detail" th:if="${!#lists.isEmpty(profiles[participant.userId].subInstrumentsList)}">
+
+                    <div class="participant-detail"
+                        th:if="${!#lists.isEmpty(profiles[participant.userId].subInstrumentsList)}">
                         <div class="detail-title">サブパート</div>
-                        <span class="badge" th:each="inst : ${profiles[participant.userId].subInstrumentsList}" th:text="${inst}"></span>
+                        <span class="badge" th:each="inst : ${profiles[participant.userId].subInstrumentsList}"
+                            th:text="${inst}"></span>
                     </div>
-                    
-                    <div class="participant-detail" th:if="${!#lists.isEmpty(profiles[participant.userId].favoriteBandsList)}">
+
+                    <div class="participant-detail"
+                        th:if="${!#lists.isEmpty(profiles[participant.userId].favoriteBandsList)}">
                         <div class="detail-title">💿 好きなバンド</div>
-                        <span class="badge" th:each="band : ${profiles[participant.userId].favoriteBandsList}" th:text="${band}"></span>
+                        <span class="badge" th:each="band : ${profiles[participant.userId].favoriteBandsList}"
+                            th:text="${band}"></span>
                     </div>
-                    
-                    <div class="participant-detail" th:if="${profiles[participant.userId].gender != null or profiles[participant.userId].age != null}">
+
+                    <div class="participant-detail"
+                        th:if="${profiles[participant.userId].gender != null or profiles[participant.userId].age != null}">
                         <div class="detail-title">基本情報</div>
                         <div style="font-size: 14px; color: #666;">
-                            <span th:if="${profiles[participant.userId].gender != null and profiles[participant.userId].gender != ''}" th:text="${profiles[participant.userId].gender}"></span>
-                            <span th:if="${profiles[participant.userId].gender != null and profiles[participant.userId].age != null}"> / </span>
-                            <span th:if="${profiles[participant.userId].age != null}" th:text="${profiles[participant.userId].age} + '歳'"></span>
+                            <span
+                                th:if="${profiles[participant.userId].gender != null and profiles[participant.userId].gender != ''}"
+                                th:text="${profiles[participant.userId].gender}"></span>
+                            <span
+                                th:if="${profiles[participant.userId].gender != null and profiles[participant.userId].age != null}">
+                                / </span>
+                            <span th:if="${profiles[participant.userId].age != null}"
+                                th:text="${profiles[participant.userId].age} + '歳'"></span>
                         </div>
                     </div>
-                    
-                    <div class="participant-detail" th:if="${profiles[participant.userId].comment != null and profiles[participant.userId].comment != ''}">
+
+                    <div class="participant-detail"
+                        th:if="${profiles[participant.userId].comment != null and profiles[participant.userId].comment != ''}">
                         <div class="detail-title">💬 コメント</div>
                         <div class="participant-comment" th:text="${profiles[participant.userId].comment}"></div>
                     </div>
                 </div>
-                
+
                 <div th:if="${profiles[participant.userId] == null}" class="no-profile">
                     プロフィール未登録
                 </div>
@@ -200,4 +240,5 @@
         </div>
     </div>
 </body>
+
 </html>

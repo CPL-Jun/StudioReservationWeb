@@ -31,14 +31,21 @@ CREATE TABLE IF NOT EXISTS profiles (
   bio        TEXT
 );
 
--- 予約テーブル
+-- 予約テーブル（Roxetteライブ対応）
 CREATE TABLE IF NOT EXISTS reservations (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  venue      TEXT    NOT NULL DEFAULT 'STUDIO',
-  room       TEXT    NOT NULL,
-  start_time TEXT    NOT NULL,
-  end_time   TEXT    NOT NULL,
-  name       TEXT    NOT NULL
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  venue             TEXT    NOT NULL DEFAULT 'STUDIO',
+  room              TEXT    NOT NULL,
+  start_time        TEXT    NOT NULL,
+  end_time          TEXT    NOT NULL,
+  name              TEXT    NOT NULL,
+  representative    TEXT,
+  band_name         TEXT,
+  is_slot           INTEGER DEFAULT 0,
+  performance_time  INTEGER,
+  changeover_time   INTEGER,
+  slot_id           INTEGER,
+  FOREIGN KEY (slot_id) REFERENCES reservations(id) ON DELETE CASCADE
 );
 
 -- 掲示板テーブル

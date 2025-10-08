@@ -9,6 +9,12 @@ public class Reservation {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String name;
+    private String representative;  // 代表者名（Roxette用）
+    private String bandName;        // バンド名（Roxette用）
+    private Boolean isSlot;         // 枠かどうか
+    private Integer performanceTime; // 演奏時間（分）
+    private Integer changeoverTime;  // 転換時間（分）
+    private Long slotId;            // どの枠に属するか
 
     public Reservation() {}
 
@@ -38,4 +44,22 @@ public class Reservation {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getRepresentative() { return representative; }
+    public void setRepresentative(String representative) { this.representative = representative; }
+
+    public String getBandName() { return bandName; }
+    public void setBandName(String bandName) { this.bandName = bandName; }
+
+    public Boolean getIsSlot() { return isSlot; }
+    public void setIsSlot(Boolean isSlot) { this.isSlot = isSlot; }
+
+    public Integer getPerformanceTime() { return performanceTime; }
+    public void setPerformanceTime(Integer performanceTime) { this.performanceTime = performanceTime; }
+
+    public Integer getChangeoverTime() { return changeoverTime; }
+    public void setChangeoverTime(Integer changeoverTime) { this.changeoverTime = changeoverTime; }
+
+    public Long getSlotId() { return slotId; }
+    public void setSlotId(Long slotId) { this.slotId = slotId; }
 }
