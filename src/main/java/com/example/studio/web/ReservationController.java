@@ -104,12 +104,6 @@ public class ReservationController {
         return "calendar-studio";
     }
 
-    // はまじるしカレンダー
-    @GetMapping("/calendar/hamajirushi")
-    public String calendarHamajirushi() {
-        return "calendar-hamajirushi";
-    }
-
     // Roxetteカレンダー（閲覧のみ）
     @GetMapping("/calendar/roxette")
     public String calendarRoxette() {

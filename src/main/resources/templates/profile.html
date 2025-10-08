@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プロフィール一覧 - スタジオ予約システム</title>
+    <title>プロフィール - スタジオ予約システム</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -43,107 +43,178 @@
             margin: 30px auto;
             padding: 0 20px;
         }
-        .form-card {
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        /* マイプロフィールセクション */
+        .my-profile-section {
             background: white;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
-        .form-card h2 {
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .section-header h2 {
+            color: #667eea;
+            font-size: 22px;
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .profile-header h3 {
+            font-size: 24px;
             color: #333;
+            margin-bottom: 8px;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 500;
-        }
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .profile-header p {
+            color: #666;
             font-size: 14px;
         }
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
         }
-        button {
-            padding: 12px 24px;
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .info-value {
+            color: #333;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background-color: #667eea;
+            color: white;
+            border-radius: 15px;
+            font-size: 13px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .btn-edit {
+            display: inline-block;
+            padding: 10px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
+            text-decoration: none;
             border-radius: 5px;
-            font-size: 16px;
             font-weight: 600;
-            cursor: pointer;
             transition: transform 0.2s;
         }
-        button:hover {
+        .btn-edit:hover {
             transform: translateY(-2px);
         }
-        .profiles-grid {
+        .empty-profile {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        /* メンバー一覧セクション */
+        .members-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .members-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
         }
-        .profile-card {
+        .member-card {
             background: white;
             padding: 25px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: transform 0.3s, box-shadow 0.3s;
         }
-        .profile-card:hover {
+        .member-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        .profile-name {
-            font-size: 20px;
+        .member-header {
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .member-name {
+            font-size: 18px;
             font-weight: 600;
             color: #667eea;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        .profile-detail {
-            color: #666;
-            margin-bottom: 8px;
+        .member-email {
+            font-size: 13px;
+            color: #999;
         }
-        .profile-bio {
-            color: #555;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #f0f0f0;
+        .member-detail {
+            margin-bottom: 12px;
         }
-        .btn-delete {
-            background: #f44336;
-            padding: 8px 16px;
+        .detail-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 6px;
+        }
+        .no-profile {
+            color: #999;
+            font-style: italic;
             font-size: 14px;
-            margin-top: 10px;
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
         }
-        .empty-message {
+        .empty-members {
             text-align: center;
             padding: 40px;
             background: white;
             border-radius: 10px;
             color: #999;
         }
+        
+        @media (max-width: 768px) {
+            .profile-info-grid {
+                grid-template-columns: 1fr;
+            }
+            .info-label {
+                margin-bottom: 3px;
+            }
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>👥 プロフィール一覧</h1>
+        <h1>👤 プロフィール</h1>
         <div class="nav">
             <a th:href="@{/dashboard}">ダッシュボード</a>
             <a th:href="@{/manage}">予約管理</a>
             <a th:href="@{/calendar/studio}">カレンダー</a>
-            <a th:href="@{/profile}">マイプロフィール</a>
-            <a th:href="@{/profiles}" class="active">プロフィール一覧</a>
+            <a th:href="@{/profile}" class="active">プロフィール</a>
             <a th:href="@{/bbs}">掲示板</a>
             <a th:href="@{/events}">イベント</a>
             <a th:href="@{/logout}">ログアウト</a>
@@ -151,50 +222,115 @@
     </div>
 
     <div class="container">
-        <div class="form-card">
-            <h2>新規プロフィール追加</h2>
-            <form th:action="@{/profiles}" method="post" th:object="${newProfile}">
-                <div class="form-group">
-                    <label>名前（必須）</label>
-                    <input type="text" th:field="*{name}" required />
-                </div>
-                <div class="form-group">
-                    <label>楽器・パート</label>
-                    <input type="text" th:field="*{instrument}" placeholder="例: Vo., Gt." />
-                </div>
-                <div class="form-group">
-                    <label>ジャンル</label>
-                    <input type="text" th:field="*{genre}" placeholder="例: Rock, Jazz" />
-                </div>
-                <div class="form-group">
-                    <label>自己紹介</label>
-                    <textarea th:field="*{bio}" placeholder="バンド経験、好きな音楽など"></textarea>
-                </div>
-                <button type="submit">追加</button>
-            </form>
+        <div th:if="${param.success}" class="success-message">
+            ✓ プロフィールを更新しました
         </div>
-
-        <h2 style="margin-bottom: 20px;">登録済みプロフィール</h2>
         
-        <div class="profiles-grid" th:if="${!#lists.isEmpty(profiles)}">
-            <div class="profile-card" th:each="profile : ${profiles}">
-                <div class="profile-name" th:text="${profile.name}">名前</div>
-                <div class="profile-detail" th:if="${profile.instrument}">
-                    🎸 <span th:text="${profile.instrument}"></span>
+        <!-- マイプロフィール -->
+        <div class="my-profile-section">
+            <div class="section-header">
+                <h2>🎸 マイプロフィール</h2>
+                <a th:href="@{/profile/edit}" class="btn-edit">
+                    <span th:if="${profile != null}">編集</span>
+                    <span th:if="${profile == null}">作成</span>
+                </a>
+            </div>
+            
+            <div class="profile-header">
+                <h3 th:text="${user.displayName}">ユーザー名</h3>
+                <p th:text="${user.email}">email@example.com</p>
+            </div>
+
+            <div th:if="${profile != null}">
+                <div class="profile-info-grid" th:if="${profile.mainInstrument != null and profile.mainInstrument != ''}">
+                    <div class="info-label">メインパート:</div>
+                    <div class="info-value">
+                        <span class="badge" th:text="${profile.mainInstrument}"></span>
+                    </div>
                 </div>
-                <div class="profile-detail" th:if="${profile.genre}">
-                    🎵 <span th:text="${profile.genre}"></span>
+                
+                <div class="profile-info-grid" th:if="${!#lists.isEmpty(profile.subInstrumentsList)}">
+                    <div class="info-label">サブパート:</div>
+                    <div class="info-value">
+                        <span class="badge" th:each="inst : ${profile.subInstrumentsList}" th:text="${inst}"></span>
+                    </div>
                 </div>
-                <div class="profile-bio" th:if="${profile.bio}" th:text="${profile.bio}"></div>
-                <form th:action="@{/profiles/{id}/delete(id=${profile.id})}" method="post">
-                    <button type="submit" class="btn-delete" onclick="return confirm('削除しますか？')">削除</button>
-                </form>
+                
+                <div class="profile-info-grid" th:if="${!#lists.isEmpty(profile.favoriteBandsList)}">
+                    <div class="info-label">好きなバンド:</div>
+                    <div class="info-value">
+                        <span class="badge" th:each="band : ${profile.favoriteBandsList}" th:text="${band}"></span>
+                    </div>
+                </div>
+                
+                <div class="profile-info-grid" th:if="${profile.gender != null and profile.gender != ''}">
+                    <div class="info-label">性別:</div>
+                    <div class="info-value" th:text="${profile.gender}"></div>
+                </div>
+                
+                <div class="profile-info-grid" th:if="${profile.age != null}">
+                    <div class="info-label">年齢:</div>
+                    <div class="info-value" th:text="${profile.age} + '歳'"></div>
+                </div>
+                
+                <div class="profile-info-grid" th:if="${profile.comment != null and profile.comment != ''}">
+                    <div class="info-label">コメント:</div>
+                    <div class="info-value" style="white-space: pre-wrap;" th:text="${profile.comment}"></div>
+                </div>
+            </div>
+
+            <div th:if="${profile == null}" class="empty-profile">
+                <p>プロフィール情報がまだ登録されていません。</p>
+                <p style="margin-top: 10px;">上のボタンからプロフィールを作成してください。</p>
             </div>
         </div>
 
-        <div class="empty-message" th:if="${#lists.isEmpty(profiles)}">
-            <p>登録されているプロフィールはありません。</p>
-            <p style="margin-top: 10px;">上のフォームから新規プロフィールを追加してください。</p>
+        <!-- メンバー一覧 -->
+        <div class="members-section">
+            <h2>👥 他のメンバー</h2>
+            
+            <div class="members-grid" th:if="${!otherProfiles.isEmpty()}">
+                <div class="member-card" th:each="entry : ${otherProfiles}">
+                    <div class="member-header">
+                        <div class="member-name" th:text="${entry.key.displayName}">メンバー名</div>
+                        <div class="member-email" th:text="${entry.key.email}">email</div>
+                    </div>
+                    
+                    <div th:if="${entry.value != null}">
+                        <div class="member-detail" th:if="${entry.value.mainInstrument != null and entry.value.mainInstrument != ''}">
+                            <div class="detail-title">🎸 メインパート</div>
+                            <span class="badge" th:text="${entry.value.mainInstrument}"></span>
+                        </div>
+                        
+                        <div class="member-detail" th:if="${!#lists.isEmpty(entry.value.subInstrumentsList)}">
+                            <div class="detail-title">サブパート</div>
+                            <span class="badge" th:each="inst : ${entry.value.subInstrumentsList}" th:text="${inst}"></span>
+                        </div>
+                        
+                        <div class="member-detail" th:if="${!#lists.isEmpty(entry.value.favoriteBandsList)}">
+                            <div class="detail-title">💿 好きなバンド</div>
+                            <span class="badge" th:each="band : ${entry.value.favoriteBandsList}" th:text="${band}"></span>
+                        </div>
+                        
+                        <div class="member-detail" th:if="${entry.value.gender != null or entry.value.age != null}">
+                            <div class="detail-title">基本情報</div>
+                            <div style="font-size: 14px; color: #666;">
+                                <span th:if="${entry.value.gender != null and entry.value.gender != ''}" th:text="${entry.value.gender}"></span>
+                                <span th:if="${entry.value.gender != null and entry.value.age != null}"> / </span>
+                                <span th:if="${entry.value.age != null}" th:text="${entry.value.age} + '歳'"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${entry.value == null}" class="no-profile">
+                        プロフィール未登録
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-members" th:if="${otherProfiles.isEmpty()}">
+                <p>他のメンバーはまだいません。</p>
+            </div>
         </div>
     </div>
 </body>

@@ -7,6 +7,7 @@ public class ProfileEditForm {
     private String favoriteBands;
     private String gender;
     private Integer age;
+    private String comment;
 
     public String getMainInstrument() { return mainInstrument; }
     public void setMainInstrument(String mainInstrument) { this.mainInstrument = mainInstrument; }
@@ -25,4 +26,7 @@ public class ProfileEditForm {
 
     public Integer getAge() { return age; }
     public void setAge(Integer age) { this.age = age; }
+
+    public String getComment() { return comment; }
+    public void setComment(String comment) { this.comment = comment; }
 }

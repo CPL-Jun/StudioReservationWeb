@@ -51,8 +51,9 @@
             font-size: 14px;
         }
         .form-group textarea {
-            min-height: 100px;
+            min-height: 120px;
             resize: vertical;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .checkbox-group {
             display: grid;
@@ -73,23 +74,29 @@
             gap: 10px;
             margin-top: 30px;
         }
-        button {
+        button, .btn-cancel {
             flex: 1;
             padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             border: none;
             border-radius: 5px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
         button:hover {
             transform: translateY(-2px);
         }
         .btn-cancel {
             background: #999;
+            color: white;
         }
         .section-title {
             font-size: 18px;
@@ -132,7 +139,7 @@
                 
                 <div class="form-group">
                     <label>好きなバンド（カンマ区切りで複数入力可）</label>
-                    <textarea th:field="*{favoriteBands}" placeholder="例: Queen, Oasis, The Beatles"></textarea>
+                    <textarea th:field="*{favoriteBands}" placeholder="例: Queen, Oasis, The Beatles" style="min-height: 80px;"></textarea>
                 </div>
                 
                 <div class="section-title">ℹ️ 基本情報</div>
@@ -152,9 +159,16 @@
                     <input type="number" th:field="*{age}" min="1" max="120" />
                 </div>
                 
+                <div class="section-title">💬 自己紹介</div>
+                
+                <div class="form-group">
+                    <label>自己紹介・コメント</label>
+                    <textarea th:field="*{comment}" placeholder="バンド経験、音楽の好み、一緒にやりたいことなど自由に記入してください"></textarea>
+                </div>
+                
                 <div class="button-group">
                     <button type="submit">保存</button>
-                    <a th:href="@{/profile}"><button type="button" class="btn-cancel">キャンセル</button></a>
+                    <a th:href="@{/profile}" class="btn-cancel">キャンセル</a>
                 </div>
             </form>
         </div>

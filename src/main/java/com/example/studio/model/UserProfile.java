@@ -13,6 +13,7 @@ public class UserProfile {
     private String favoriteBands;
     private String gender;
     private Integer age;
+    private String comment;
     private LocalDateTime updatedAt;
 
     public List<String> getSubInstrumentsList() {
@@ -55,6 +56,9 @@ public class UserProfile {
 
     public Integer getAge() { return age; }
     public void setAge(Integer age) { this.age = age; }
+
+    public String getComment() { return comment; }
+    public void setComment(String comment) { this.comment = comment; }
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }

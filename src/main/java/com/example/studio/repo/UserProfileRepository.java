@@ -31,6 +31,7 @@ public class UserProfileRepository {
             profile.setSubInstruments(rs.getString("sub_instruments"));
             profile.setFavoriteBands(rs.getString("favorite_bands"));
             profile.setGender(rs.getString("gender"));
+            profile.setComment(rs.getString("comment"));
             
             int age = rs.getInt("age");
             if (!rs.wasNull()) {
@@ -69,25 +70,27 @@ public class UserProfileRepository {
 
     public void insert(UserProfile profile) {
         jdbc.update(
-            "INSERT INTO user_profiles (user_id, main_instrument, sub_instruments, favorite_bands, gender, age, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO user_profiles (user_id, main_instrument, sub_instruments, favorite_bands, gender, age, comment, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             profile.getUserId(),
             profile.getMainInstrument(),
             profile.getSubInstruments(),
             profile.getFavoriteBands(),
             profile.getGender(),
             profile.getAge(),
+            profile.getComment(),
             LocalDateTime.now().toString()
         );
     }
 
     public void update(UserProfile profile) {
         jdbc.update(
-            "UPDATE user_profiles SET main_instrument = ?, sub_instruments = ?, favorite_bands = ?, gender = ?, age = ?, updated_at = ? WHERE id = ?",
+            "UPDATE user_profiles SET main_instrument = ?, sub_instruments = ?, favorite_bands = ?, gender = ?, age = ?, comment = ?, updated_at = ? WHERE id = ?",
             profile.getMainInstrument(),
             profile.getSubInstruments(),
             profile.getFavoriteBands(),
             profile.getGender(),
             profile.getAge(),
+            profile.getComment(),
             LocalDateTime.now().toString(),
             profile.getId()
         );

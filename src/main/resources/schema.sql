@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   favorite_bands  TEXT,
   gender          TEXT,
   age             INTEGER,
+  comment         TEXT,
   updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE
 );
@@ -63,4 +64,13 @@ CREATE TABLE IF NOT EXISTS events (
   created_by    TEXT    NOT NULL,
   created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
   updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+-- はまじるし参加者テーブル
+CREATE TABLE IF NOT EXISTS hamajirushi_participants (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  date       TEXT    NOT NULL,
+  user_id    INTEGER NOT NULL,
+  created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE
 );
