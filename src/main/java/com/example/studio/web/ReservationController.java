@@ -1,9 +1,12 @@
 package com.example.studio.web;
 
+import com.example.studio.model.AppUser;
 import com.example.studio.model.Reservation;
+import com.example.studio.repo.AppUserRepository;
 import com.example.studio.repo.ReservationRepository;
 import com.example.studio.repo.ProfileRepository;
 import com.example.studio.service.GoogleCalendarSyncService;
+import com.example.studio.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -19,20 +22,38 @@ public class ReservationController {
     private final ReservationRepository repo;
     private final GoogleCalendarSyncService calendarSync;
     private final ProfileRepository profileRepo;
+    private final AppUserRepository appUserRepo;
+    private final UserService userService;
 
     public ReservationController(ReservationRepository repo, 
                                 GoogleCalendarSyncService calendarSync,
-                                ProfileRepository profileRepo) {
+                                ProfileRepository profileRepo,
+                                AppUserRepository appUserRepo,
+                                UserService userService) {
         this.repo = repo;
         this.calendarSync = calendarSync;
         this.profileRepo = profileRepo;
+        this.appUserRepo = appUserRepo;
+        this.userService = userService;
     }
 
     @GetMapping("/manage")
     public String manage(Model model) {
         model.addAttribute("reservations", repo.findAll());
         model.addAttribute("profiles", profileRepo.findAll());
-        model.addAttribute("reservation", new Reservation());
+        
+        // ユーザーの表示名リストを追加
+        List<AppUser> users = appUserRepo.findAll();
+        model.addAttribute("users", users);
+        
+        // 現在のユーザーの表示名をデフォルト値として設定
+        AppUser currentUser = userService.getCurrentUser();
+        Reservation reservation = new Reservation();
+        if (currentUser != null) {
+            reservation.setName(currentUser.getDisplayName());
+        }
+        model.addAttribute("reservation", reservation);
+        
         return "reservations";
     }
 
@@ -57,7 +78,11 @@ public class ReservationController {
     public String editForm(@PathVariable Long id, Model model) {
         Reservation reservation = repo.findById(id);
         model.addAttribute("reservation", reservation);
-        model.addAttribute("profiles", profileRepo.findAll());
+        
+        // ユーザーの表示名リストを追加
+        List<AppUser> users = appUserRepo.findAll();
+        model.addAttribute("users", users);
+        
         return "edit";
     }
 
@@ -88,7 +113,7 @@ public class ReservationController {
     // Roxetteカレンダー（閲覧のみ）
     @GetMapping("/calendar/roxette")
     public String calendarRoxette() {
-        return "calendar-roxette";
+        return "calendar-livehouse";
     }
 
     // 旧カレンダー（リダイレクト）

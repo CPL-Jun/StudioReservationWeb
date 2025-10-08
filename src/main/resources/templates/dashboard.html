@@ -105,7 +105,8 @@
             <a th:href="@{/dashboard}">ホーム</a>
             <a th:href="@{/manage}">予約管理</a>
             <a th:href="@{/calendar/studio}">カレンダー</a>
-            <a th:href="@{/profile}">プロフィール</a>
+            <a th:href="@{/profile}">マイプロフィール</a>
+            <a th:href="@{/profiles}">プロフィール一覧</a>
             <a th:href="@{/bbs}">掲示板</a>
             <a th:href="@{/events}">イベント</a>
             <a th:if="${isAdmin}" th:href="@{/admin}">管理画面</a>
@@ -130,9 +131,15 @@
             </div>
             
             <div class="card">
-                <h3>👤 プロフィール</h3>
+                <h3>👤 マイプロフィール</h3>
                 <p>プロフィール情報管理</p>
                 <a th:href="@{/profile}">プロフィールへ →</a>
+            </div>
+            
+            <div class="card">
+                <h3>👥 プロフィール一覧</h3>
+                <p>メンバー情報を確認</p>
+                <a th:href="@{/profiles}">プロフィール一覧へ →</a>
             </div>
             
             <div class="card">

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロフィール一覧 - スタジオ予約システム</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .nav a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        .nav a.active {
+            background-color: rgba(255,255,255,0.3);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .form-card h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .profiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .profile-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .profile-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .profile-detail {
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .profile-bio {
+            color: #555;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .btn-delete {
+            background: #f44336;
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👥 プロフィール一覧</h1>
+        <div class="nav">
+            <a th:href="@{/dashboard}">ダッシュボード</a>
+            <a th:href="@{/manage}">予約管理</a>
+            <a th:href="@{/calendar/studio}">カレンダー</a>
+            <a th:href="@{/profile}">マイプロフィール</a>
+            <a th:href="@{/profiles}" class="active">プロフィール一覧</a>
+            <a th:href="@{/bbs}">掲示板</a>
+            <a th:href="@{/events}">イベント</a>
+            <a th:href="@{/logout}">ログアウト</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <h2>新規プロフィール追加</h2>
+            <form th:action="@{/profiles}" method="post" th:object="${newProfile}">
+                <div class="form-group">
+                    <label>名前（必須）</label>
+                    <input type="text" th:field="*{name}" required />
+                </div>
+                <div class="form-group">
+                    <label>楽器・パート</label>
+                    <input type="text" th:field="*{instrument}" placeholder="例: Vo., Gt." />
+                </div>
+                <div class="form-group">
+                    <label>ジャンル</label>
+                    <input type="text" th:field="*{genre}" placeholder="例: Rock, Jazz" />
+                </div>
+                <div class="form-group">
+                    <label>自己紹介</label>
+                    <textarea th:field="*{bio}" placeholder="バンド経験、好きな音楽など"></textarea>
+                </div>
+                <button type="submit">追加</button>
+            </form>
+        </div>
+
+        <h2 style="margin-bottom: 20px;">登録済みプロフィール</h2>
+        
+        <div class="profiles-grid" th:if="${!#lists.isEmpty(profiles)}">
+            <div class="profile-card" th:each="profile : ${profiles}">
+                <div class="profile-name" th:text="${profile.name}">名前</div>
+                <div class="profile-detail" th:if="${profile.instrument}">
+                    🎸 <span th:text="${profile.instrument}"></span>
+                </div>
+                <div class="profile-detail" th:if="${profile.genre}">
+                    🎵 <span th:text="${profile.genre}"></span>
+                </div>
+                <div class="profile-bio" th:if="${profile.bio}" th:text="${profile.bio}"></div>
+                <form th:action="@{/profiles/{id}/delete(id=${profile.id})}" method="post">
+                    <button type="submit" class="btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="empty-message" th:if="${#lists.isEmpty(profiles)}">
+            <p>登録されているプロフィールはありません。</p>
+            <p style="margin-top: 10px;">上のフォームから新規プロフィールを追加してください。</p>
+        </div>
+    </div>
+</body>
+</html>
