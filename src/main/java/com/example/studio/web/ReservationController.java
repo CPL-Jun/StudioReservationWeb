@@ -42,20 +42,55 @@ public class ReservationController {
         AppUser currentUser = userService.getCurrentUser();
         boolean isAdmin = userService.isCurrentUserAdmin();
         
-        List<Reservation> reservations;
+        List<Reservation> allReservations;
         if (isAdmin) {
             // 管理者：全予約を表示
-            reservations = repo.findAll();
+            allReservations = repo.findAll();
         } else if (currentUser != null) {
             // 一般ユーザー：自分の予約のみ表示
-            reservations = repo.findAll().stream()
+            allReservations = repo.findAll().stream()
                 .filter(r -> r.getName().equals(currentUser.getDisplayName()))
                 .toList();
         } else {
-            reservations = List.of();
+            allReservations = List.of();
         }
         
-        model.addAttribute("reservations", reservations);
+        // カテゴリ別に分類（管理者用）
+        if (isAdmin) {
+            // スタジオ予約（A, B）
+            List<Reservation> studioReservations = allReservations.stream()
+                .filter(r -> "A".equals(r.getRoom()) || "B".equals(r.getRoom()))
+                .toList();
+            
+            // はまじるし予約
+            List<Reservation> hamajirushiReservations = allReservations.stream()
+                .filter(r -> "Hamajirushi".equals(r.getRoom()))
+                .toList();
+            
+            // Roxette予約
+            List<Reservation> roxetteReservations = allReservations.stream()
+                .filter(r -> "Roxette".equals(r.getRoom()))
+                .toList();
+            
+            // Roxetteの枠とそれに紐づくバンドをマッピング
+            Map<Reservation, List<Reservation>> roxetteSlots = new java.util.LinkedHashMap<>();
+            for (Reservation r : roxetteReservations) {
+                if (r.getIsSlot() != null && r.getIsSlot()) {
+                    // これは枠
+                    List<Reservation> bands = roxetteReservations.stream()
+                        .filter(b -> b.getSlotId() != null && b.getSlotId().equals(r.getId()))
+                        .toList();
+                    roxetteSlots.put(r, bands);
+                }
+            }
+            
+            model.addAttribute("studioReservations", studioReservations);
+            model.addAttribute("hamajirushiReservations", hamajirushiReservations);
+            model.addAttribute("roxetteSlots", roxetteSlots);
+        } else {
+            model.addAttribute("reservations", allReservations);
+        }
+        
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("currentUserName", currentUser != null ? currentUser.getDisplayName() : "");
         

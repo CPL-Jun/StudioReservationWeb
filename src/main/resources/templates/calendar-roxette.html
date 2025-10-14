@@ -300,7 +300,8 @@
                 <h2 id="liveModalTitle">ライブ登録</h2>
             </div>
             <div class="event-info" id="liveInfo">
-                <p><strong>日時:</strong> <span id="liveDateTime"></span></p>
+                <p><strong>枠:</strong> <span id="slotDateTime"></span></p>
+                <p id="slotDetailsInfo" style="font-size: 13px; color: #666; margin-top: 5px;"></p>
             </div>
             <form id="liveForm">
                 <input type="hidden" id="liveEventId">
@@ -308,9 +309,22 @@
                 <input type="hidden" id="liveStart">
                 <input type="hidden" id="liveEnd">
                 
+                <div class="form-group" id="timeSlotGroup" style="display: none;">
+                    <label>出演時間スロット <span class="required">*</span></label>
+                    <select id="timeSlotSelect" required>
+                        <option value="">選択してください</option>
+                    </select>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        ※演奏時間と転換時間を含む枠です
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label>代表者名 <span class="required">*</span></label>
-                    <input type="text" id="liveRepresentative" required placeholder="例: 山田太郎">
+                    <input type="text" id="liveRepresentative" required placeholder="例: 山田太郎" readonly style="background-color: #f0f0f0;">
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        ※ログインユーザー名が自動設定されます
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -333,6 +347,7 @@
     /*<![CDATA[*/
     let calendar;
     let isAdmin = /*[[${#authorization.expression('hasRole(''ADMIN'')')}]]*/ false;
+    let currentUserName = /*[[${currentUserName}]]*/ null;
     
     document.addEventListener('DOMContentLoaded', function() {
         const calendarEl = document.getElementById('calendar');
@@ -570,15 +585,36 @@
             document.getElementById('liveModalTitle').textContent = 'ライブ登録';
             document.getElementById('liveEventId').value = '';
             document.getElementById('liveSlotId').value = event.id;
-            document.getElementById('liveStart').value = event.startStr;
-            document.getElementById('liveEnd').value = event.endStr;
             
-            document.getElementById('liveDateTime').textContent = 
-                new Date(event.start).toLocaleString('ja-JP') + ' - ' +
-                new Date(event.end).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+            // 枠の情報を表示
+            const slotStart = new Date(event.start);
+            const slotEnd = new Date(event.end);
+            document.getElementById('slotDateTime').textContent = 
+                slotStart.toLocaleDateString('ja-JP') + ' ' +
+                slotStart.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'}) + ' - ' +
+                slotEnd.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
             
-            document.getElementById('liveRepresentative').value = '';
+            const performanceTime = event.extendedProps.performanceTime || 15;
+            const changeoverTime = event.extendedProps.changeoverTime || 10;
+            const totalSlotTime = performanceTime + changeoverTime;
+            
+            document.getElementById('slotDetailsInfo').textContent = 
+                `演奏時間: ${performanceTime}分 / 転換時間: ${changeoverTime}分 (1枠: ${totalSlotTime}分)`;
+            
+            // 利用可能な時間スロットを生成
+            generateTimeSlots(event.id, slotStart, slotEnd, performanceTime, changeoverTime);
+            
+            document.getElementById('timeSlotGroup').style.display = 'block';
+            
+            // 代表者名をログインユーザー名で自動設定
+            document.getElementById('liveRepresentative').value = currentUserName || '';
+            document.getElementById('liveRepresentative').readOnly = true;
+            
             document.getElementById('liveBandName').value = '';
+            
+            // 時間は選択後に設定するため、空にしておく
+            document.getElementById('liveStart').value = '';
+            document.getElementById('liveEnd').value = '';
             
             document.getElementById('liveDeleteButtonGroup').style.display = 'none';
         } else {
@@ -589,15 +625,89 @@
             document.getElementById('liveStart').value = event.startStr;
             document.getElementById('liveEnd').value = event.endStr;
             
-            document.getElementById('liveDateTime').textContent = 
-                new Date(event.start).toLocaleString('ja-JP') + ' - ' +
-                new Date(event.end).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+            const eventStart = new Date(event.start);
+            const eventEnd = new Date(event.end);
+            document.getElementById('slotDateTime').textContent = 
+                eventStart.toLocaleDateString('ja-JP') + ' ' +
+                eventStart.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'}) + ' - ' +
+                eventEnd.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
             
+            document.getElementById('slotDetailsInfo').textContent = '登録済みライブの編集';
+            document.getElementById('timeSlotGroup').style.display = 'none';
+            
+            // 編集時は代表者名も表示（readonly）
             document.getElementById('liveRepresentative').value = event.extendedProps.representative || '';
+            document.getElementById('liveRepresentative').readOnly = true;
+            
             document.getElementById('liveBandName').value = event.extendedProps.bandName || '';
             
             document.getElementById('liveDeleteButtonGroup').style.display = 'flex';
         }
+    }
+    
+    // 利用可能な時間スロットを生成
+    function generateTimeSlots(slotId, slotStart, slotEnd, performanceTime, changeoverTime) {
+        const select = document.getElementById('timeSlotSelect');
+        select.innerHTML = '<option value="">選択してください</option>';
+        
+        const totalSlotTime = performanceTime + changeoverTime;
+        const slotDurationMs = totalSlotTime * 60 * 1000;
+        
+        // 既存の予約を取得して、埋まっているスロットを特定
+        fetch('/api/events')
+            .then(r => r.json())
+            .then(allEvents => {
+                const bookedSlots = allEvents.filter(e => 
+                    e.resourceId === 'Roxette' && 
+                    !e.isSlot && 
+                    e.slotId == slotId
+                );
+                
+                let currentTime = new Date(slotStart);
+                const endTime = new Date(slotEnd);
+                
+                while (currentTime < endTime) {
+                    const slotEndTime = new Date(currentTime.getTime() + slotDurationMs);
+                    
+                    if (slotEndTime <= endTime) {
+                        // このスロットが既に予約されているかチェック
+                        const isBooked = bookedSlots.some(booking => {
+                            const bookingStart = new Date(booking.start);
+                            const bookingEnd = new Date(booking.end);
+                            return (
+                                (currentTime >= bookingStart && currentTime < bookingEnd) ||
+                                (slotEndTime > bookingStart && slotEndTime <= bookingEnd) ||
+                                (currentTime <= bookingStart && slotEndTime >= bookingEnd)
+                            );
+                        });
+                        
+                        const option = document.createElement('option');
+                        const startStr = currentTime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+                        const endStr = slotEndTime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+                        
+                        option.value = JSON.stringify({
+                            start: currentTime.toISOString(),
+                            end: slotEndTime.toISOString()
+                        });
+                        
+                        if (isBooked) {
+                            option.textContent = `${startStr} - ${endStr} (予約済み)`;
+                            option.disabled = true;
+                            option.style.color = '#999';
+                        } else {
+                            option.textContent = `${startStr} - ${endStr}`;
+                        }
+                        
+                        select.appendChild(option);
+                    }
+                    
+                    currentTime = new Date(currentTime.getTime() + slotDurationMs);
+                }
+            })
+            .catch(error => {
+                console.error('時間スロット生成エラー:', error);
+                alert('時間スロットの読み込みに失敗しました');
+            });
     }
     
     function closeLiveModal() {
@@ -609,12 +719,34 @@
         const slotId = document.getElementById('liveSlotId').value;
         const representative = document.getElementById('liveRepresentative').value;
         const bandName = document.getElementById('liveBandName').value;
-        const startTime = document.getElementById('liveStart').value;
-        const endTime = document.getElementById('liveEnd').value;
         
-        if (!representative || !bandName) {
-            alert('代表者名とバンド名を入力してください');
+        if (!representative) {
+            alert('代表者名が設定されていません。ログインしているか確認してください。');
             return;
+        }
+        
+        if (!bandName) {
+            alert('バンド名を入力してください');
+            return;
+        }
+        
+        let startTime, endTime;
+        
+        // 新規登録の場合は時間スロットから取得
+        if (!eventId) {
+            const timeSlotSelect = document.getElementById('timeSlotSelect');
+            if (!timeSlotSelect.value) {
+                alert('出演時間スロットを選択してください');
+                return;
+            }
+            
+            const selectedSlot = JSON.parse(timeSlotSelect.value);
+            startTime = selectedSlot.start;
+            endTime = selectedSlot.end;
+        } else {
+            // 既存編集の場合は既存の時間を使用
+            startTime = document.getElementById('liveStart').value;
+            endTime = document.getElementById('liveEnd').value;
         }
         
         const data = {

@@ -56,16 +56,148 @@
             margin-bottom: 15px;
             font-size: 16px;
         }
-        .empty-message {
-            text-align: center;
-            padding: 40px 20px;
+        
+        /* タブスタイル（管理者用） */
+        .tabs-container {
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            color: #999;
+            overflow: hidden;
+        }
+        .tabs {
+            display: flex;
+            background: #f0f0f0;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-button:hover {
+            background: #e0e0e0;
+        }
+        .tab-button.active {
+            color: #667eea;
+            background: white;
+            border-bottom-color: #667eea;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        .tab-content.active {
+            display: block;
         }
         
-        /* カード形式（スマホ用） */
+        /* アコーディオンスタイル */
+        .accordion {
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .accordion-header {
+            background: #f9f9f9;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        .accordion-header:hover {
+            background: #f0f0f0;
+        }
+        .accordion-header.active {
+            background: #667eea;
+            color: white;
+        }
+        .accordion-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .accordion-icon {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+        .accordion-content {
+            display: none;
+            padding: 15px;
+            background: white;
+        }
+        .accordion-content.active {
+            display: block;
+        }
+        
+        /* Roxette枠スタイル */
+        .slot-info {
+            background: #f0f4ff;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .slot-info-row {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        .slot-info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .slot-info-value {
+            color: #333;
+        }
+        .band-list {
+            margin-top: 10px;
+        }
+        .band-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 3px solid #a29bfe;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .band-info {
+            flex: 1;
+        }
+        .band-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .band-time {
+            font-size: 12px;
+            color: #666;
+        }
+        .band-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .no-bands {
+            color: #999;
+            font-style: italic;
+            font-size: 13px;
+            padding: 10px;
+        }
+        
+        /* 予約カードスタイル（一般ユーザー用） */
         .reservation-card {
             background: white;
             padding: 15px;
@@ -132,9 +264,25 @@
             background-color: #f44336;
             color: white;
         }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
         
         /* テーブル形式（デスクトップ用） */
         .table-container {
+            overflow-x: auto;
             display: none;
         }
         
@@ -144,33 +292,24 @@
             }
             .table-container {
                 display: block;
-                overflow-x: auto;
             }
             table {
                 width: 100%;
                 background: white;
-                border-radius: 10px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                border-radius: 5px;
             }
             th, td {
-                padding: 15px;
+                padding: 12px;
                 text-align: left;
+                font-size: 13px;
             }
             th {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
+                background: #f0f0f0;
+                color: #333;
                 font-weight: 600;
             }
             tr:nth-child(even) {
                 background-color: #f9f9f9;
-            }
-            .btn-sm {
-                padding: 6px 12px;
-                font-size: 14px;
-                margin-right: 5px;
-                border-radius: 5px;
-                text-decoration: none;
-                display: inline-block;
             }
         }
     </style>
@@ -194,76 +333,306 @@
             💡 カレンダーから予約を作成してください。自分の予約をクリックすると編集できます。
         </div>
 
-        <h2 th:if="${isAdmin}">全ての予約一覧</h2>
-        <h2 th:if="${!isAdmin}">マイ予約一覧</h2>
-        
-        <!-- 予約が空の場合 -->
-        <div class="empty-message" th:if="${#lists.isEmpty(reservations)}">
-            <p th:if="${isAdmin}">予約がありません。</p>
-            <p th:if="${!isAdmin}">
-                まだ予約がありません。<br>
-                <a th:href="@{/calendar/studio}" style="color: #667eea; text-decoration: none; font-weight: 600;">カレンダーから予約</a>してください。
-            </p>
+        <!-- 管理者用：タブ表示 -->
+        <div th:if="${isAdmin}" class="tabs-container">
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('studio')">
+                    🎸 スタジオ (<span th:text="${#lists.size(studioReservations)}">0</span>)
+                </button>
+                <button class="tab-button" onclick="switchTab('hamajirushi')">
+                    🍴 はまじるし (<span th:text="${#lists.size(hamajirushiReservations)}">0</span>)
+                </button>
+                <button class="tab-button" onclick="switchTab('roxette')">
+                    🎤 Roxette (<span th:text="${#maps.size(roxetteSlots)}">0</span>枠)
+                </button>
+            </div>
+
+            <!-- スタジオタブ -->
+            <div id="studio-tab" class="tab-content active">
+                <div th:if="${#lists.isEmpty(studioReservations)}" class="empty-message">
+                    <p>スタジオ予約がありません</p>
+                </div>
+                
+                <!-- スマホ用：カード形式 -->
+                <div class="reservation-card" th:each="r : ${studioReservations}">
+                    <div class="reservation-header">
+                        <span class="reservation-id">ID: <span th:text="${r.id}"></span></span>
+                        <span class="reservation-room" th:text="'スタジオ ' + ${r.room}"></span>
+                    </div>
+                    <div class="reservation-info">
+                        <div class="info-row">
+                            <span class="info-label">予約者:</span>
+                            <span class="info-value" th:text="${r.name}"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">開始:</span>
+                            <span class="info-value" th:text="${#temporals.format(r.startTime, 'MM/dd HH:mm')}"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">終了:</span>
+                            <span class="info-value" th:text="${#temporals.format(r.endTime, 'MM/dd HH:mm')}"></span>
+                        </div>
+                    </div>
+                    <div class="reservation-actions">
+                        <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-edit">編集</a>
+                        <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="flex: 1; margin: 0;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- デスクトップ用：テーブル形式 -->
+                <div class="table-container" th:if="${!#lists.isEmpty(studioReservations)}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>部屋</th>
+                                <th>予約者</th>
+                                <th>開始時刻</th>
+                                <th>終了時刻</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="r : ${studioReservations}">
+                                <td th:text="${r.id}"></td>
+                                <td th:text="'スタジオ ' + ${r.room}"></td>
+                                <td th:text="${r.name}"></td>
+                                <td th:text="${#temporals.format(r.startTime, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td th:text="${#temporals.format(r.endTime, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td>
+                                    <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-sm btn-edit">編集</a>
+                                    <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn-sm btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- はまじるしタブ -->
+            <div id="hamajirushi-tab" class="tab-content">
+                <div th:if="${#lists.isEmpty(hamajirushiReservations)}" class="empty-message">
+                    <p>はまじるし予約がありません</p>
+                </div>
+                
+                <!-- スマホ用：カード形式 -->
+                <div class="reservation-card" th:each="r : ${hamajirushiReservations}">
+                    <div class="reservation-header">
+                        <span class="reservation-id">ID: <span th:text="${r.id}"></span></span>
+                        <span class="reservation-room" style="background: #f7b731;">はまじるし</span>
+                    </div>
+                    <div class="reservation-info">
+                        <div class="info-row">
+                            <span class="info-label">予約者:</span>
+                            <span class="info-value" th:text="${r.name}"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">開始:</span>
+                            <span class="info-value" th:text="${#temporals.format(r.startTime, 'MM/dd HH:mm')}"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">終了:</span>
+                            <span class="info-value" th:text="${#temporals.format(r.endTime, 'MM/dd HH:mm')}"></span>
+                        </div>
+                    </div>
+                    <div class="reservation-actions">
+                        <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-edit">編集</a>
+                        <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="flex: 1; margin: 0;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- デスクトップ用：テーブル形式 -->
+                <div class="table-container" th:if="${!#lists.isEmpty(hamajirushiReservations)}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>予約者</th>
+                                <th>開始時刻</th>
+                                <th>終了時刻</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="r : ${hamajirushiReservations}">
+                                <td th:text="${r.id}"></td>
+                                <td th:text="${r.name}"></td>
+                                <td th:text="${#temporals.format(r.startTime, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td th:text="${#temporals.format(r.endTime, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td>
+                                    <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-sm btn-edit">編集</a>
+                                    <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn-sm btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Roxetteタブ -->
+            <div id="roxette-tab" class="tab-content">
+                <div th:if="${#maps.isEmpty(roxetteSlots)}" class="empty-message">
+                    <p>Roxette枠がありません</p>
+                </div>
+                
+                <!-- 枠ごとのアコーディオン -->
+                <div th:each="entry : ${roxetteSlots}" class="accordion">
+                    <div class="accordion-header" th:onclick="'toggleAccordion(' + ${entry.key.id} + ')'">
+                        <div class="accordion-title">
+                            <span th:text="${#temporals.format(entry.key.startTime, 'yyyy-MM-dd')}"></span>
+                            <span th:text="' ' + ${#temporals.format(entry.key.startTime, 'HH:mm')} + '-' + ${#temporals.format(entry.key.endTime, 'HH:mm')}"></span>
+                            <span th:text="' (' + ${#lists.size(entry.value)} + 'バンド)'"></span>
+                        </div>
+                        <div class="accordion-icon">▼</div>
+                    </div>
+                    <div class="accordion-content" th:id="'accordion-' + ${entry.key.id}">
+                        <div class="slot-info">
+                            <div class="slot-info-row">
+                                <span class="slot-info-label">枠ID:</span>
+                                <span class="slot-info-value" th:text="${entry.key.id}"></span>
+                            </div>
+                            <div class="slot-info-row">
+                                <span class="slot-info-label">演奏時間:</span>
+                                <span class="slot-info-value" th:text="${entry.key.performanceTime} + '分'"></span>
+                            </div>
+                            <div class="slot-info-row">
+                                <span class="slot-info-label">転換時間:</span>
+                                <span class="slot-info-value" th:text="${entry.key.changeoverTime} + '分'"></span>
+                            </div>
+                            <div class="slot-info-row">
+                                <a th:href="@{/reservations/{id}/edit(id=${entry.key.id})}" class="btn-sm btn-edit">枠を編集</a>
+                                <form th:action="@{/reservations/{id}/delete(id=${entry.key.id})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn-sm btn-delete" onclick="return confirm('この枠と全てのバンドを削除しますか？')">枠を削除</button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="band-list">
+                            <h4 style="margin-bottom: 10px; font-size: 14px; color: #555;">出演バンド一覧</h4>
+                            <div th:if="${#lists.isEmpty(entry.value)}" class="no-bands">
+                                まだ出演バンドが登録されていません
+                            </div>
+                            <div th:each="band : ${entry.value}" class="band-item">
+                                <div class="band-info">
+                                    <div class="band-name" th:text="${band.bandName}"></div>
+                                    <div class="band-time">
+                                        代表: <span th:text="${band.representative}"></span> | 
+                                        <span th:text="${#temporals.format(band.startTime, 'HH:mm')} + '-' + ${#temporals.format(band.endTime, 'HH:mm')}"></span>
+                                    </div>
+                                </div>
+                                <div class="band-actions">
+                                    <a th:href="@{/reservations/{id}/edit(id=${band.id})}" class="btn-sm btn-edit">編集</a>
+                                    <form th:action="@{/reservations/{id}/delete(id=${band.id})}" method="post" style="display: inline; margin: 0;">
+                                        <button type="submit" class="btn-sm btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <!-- スマホ用：カード形式 -->
-        <div class="reservation-card" th:each="r : ${reservations}">
-            <div class="reservation-header">
-                <span class="reservation-id">ID: <span th:text="${r.id}"></span></span>
-                <span class="reservation-room" th:text="${r.room}"></span>
+
+        <!-- 一般ユーザー用：従来の表示 -->
+        <div th:if="${!isAdmin}">
+            <h2>マイ予約一覧</h2>
+            
+            <div class="empty-message" th:if="${#lists.isEmpty(reservations)}">
+                <p>
+                    まだ予約がありません。<br>
+                    <a th:href="@{/calendar/studio}" style="color: #667eea; text-decoration: none; font-weight: 600;">カレンダーから予約</a>してください。
+                </p>
             </div>
-            <div class="reservation-info">
-                <div class="info-row">
-                    <span class="info-label">予約者:</span>
-                    <span class="info-value" th:text="${r.name}"></span>
+            
+            <!-- スマホ用：カード形式 -->
+            <div class="reservation-card" th:each="r : ${reservations}">
+                <div class="reservation-header">
+                    <span class="reservation-id">ID: <span th:text="${r.id}"></span></span>
+                    <span class="reservation-room" th:text="${r.room}"></span>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">開始:</span>
-                    <span class="info-value" th:text="${#temporals.format(r.startTime, 'MM/dd HH:mm')}"></span>
+                <div class="reservation-info">
+                    <div class="info-row">
+                        <span class="info-label">予約者:</span>
+                        <span class="info-value" th:text="${r.name}"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">開始:</span>
+                        <span class="info-value" th:text="${#temporals.format(r.startTime, 'MM/dd HH:mm')}"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">終了:</span>
+                        <span class="info-value" th:text="${#temporals.format(r.endTime, 'MM/dd HH:mm')}"></span>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">終了:</span>
-                    <span class="info-value" th:text="${#temporals.format(r.endTime, 'MM/dd HH:mm')}"></span>
+                <div class="reservation-actions">
+                    <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-edit">編集</a>
+                    <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="flex: 1; margin: 0;">
+                        <button type="submit" class="btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                    </form>
                 </div>
             </div>
-            <div class="reservation-actions">
-                <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-edit">編集</a>
-                <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="flex: 1; margin: 0;">
-                    <button type="submit" class="btn-delete" onclick="return confirm('削除しますか？')">削除</button>
-                </form>
+            
+            <!-- デスクトップ用：テーブル形式 -->
+            <div class="table-container" th:if="${!#lists.isEmpty(reservations)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>部屋</th>
+                            <th>予約者</th>
+                            <th>開始時刻</th>
+                            <th>終了時刻</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="r : ${reservations}">
+                            <td th:text="${r.id}"></td>
+                            <td th:text="${r.room}"></td>
+                            <td th:text="${r.name}"></td>
+                            <td th:text="${#temporals.format(r.startTime, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td th:text="${#temporals.format(r.endTime, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td>
+                                <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-sm btn-edit">編集</a>
+                                <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn-sm btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-        </div>
-        
-        <!-- デスクトップ用：テーブル形式 -->
-        <div class="table-container" th:if="${!#lists.isEmpty(reservations)}">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>部屋</th>
-                        <th>予約者</th>
-                        <th>開始時刻</th>
-                        <th>終了時刻</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="r : ${reservations}">
-                        <td th:text="${r.id}"></td>
-                        <td th:text="${r.room}"></td>
-                        <td th:text="${r.name}"></td>
-                        <td th:text="${#temporals.format(r.startTime, 'yyyy-MM-dd HH:mm')}"></td>
-                        <td th:text="${#temporals.format(r.endTime, 'yyyy-MM-dd HH:mm')}"></td>
-                        <td>
-                            <a th:href="@{/reservations/{id}/edit(id=${r.id})}" class="btn-sm btn-edit">編集</a>
-                            <form th:action="@{/reservations/{id}/delete(id=${r.id})}" method="post" style="display: inline;">
-                                <button type="submit" class="btn-sm btn-delete" onclick="return confirm('削除しますか？')">削除</button>
-                            </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </div>
+
+    <script>
+    // タブ切り替え
+    function switchTab(tabName) {
+        // 全てのタブボタンとコンテンツを非アクティブに
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        // 選択されたタブをアクティブに
+        event.target.classList.add('active');
+        document.getElementById(tabName + '-tab').classList.add('active');
+    }
+    
+    // アコーディオン開閉
+    function toggleAccordion(id) {
+        const header = event.currentTarget;
+        const content = document.getElementById('accordion-' + id);
+        
+        header.classList.toggle('active');
+        content.classList.toggle('active');
+    }
+    </script>
 </body>
 </html>
