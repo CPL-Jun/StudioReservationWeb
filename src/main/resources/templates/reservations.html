@@ -43,49 +43,26 @@
         .container {
             padding: 15px;
         }
-        .form-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
             margin-bottom: 20px;
-        }
-        .form-card h2 {
-            margin-bottom: 15px;
-            color: #333;
-            font-size: 16px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 500;
+            color: #004085;
             font-size: 14px;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
         }
         h2 {
             margin-bottom: 15px;
             font-size: 16px;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #999;
         }
         
         /* カード形式（スマホ用） */
@@ -205,8 +182,7 @@
             <a th:href="@{/dashboard}">ホーム</a>
             <a th:href="@{/manage}" class="active">予約管理</a>
             <a th:href="@{/calendar/studio}">カレンダー</a>
-            <a th:href="@{/profile}">マイプロフィール</a>
-            <a th:href="@{/profiles}">プロフィール一覧</a>
+            <a th:href="@{/profile}">プロフィール</a>
             <a th:href="@{/bbs}">掲示板</a>
             <a th:href="@{/events}">イベント</a>
             <a th:href="@{/logout}">ログアウト</a>
@@ -214,40 +190,21 @@
     </div>
 
     <div class="container">
-        <div class="form-card">
-            <h2>新規予約登録</h2>
-            <form th:action="@{/reservations}" method="post" th:object="${reservation}">
-                <div class="form-group">
-                    <label>部屋</label>
-                    <select th:field="*{room}" required>
-                        <option value="A">スタジオA</option>
-                        <option value="B">スタジオB</option>
-                        <option value="Hamajirushi">はまじるし</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>予約者名</label>
-                    <select th:field="*{name}" required>
-                        <option th:each="user : ${users}" 
-                                th:value="${user.displayName}" 
-                                th:text="${user.displayName}"
-                                th:selected="${user.displayName == reservation.name}">
-                        </option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>開始時刻</label>
-                    <input type="datetime-local" th:field="*{startTime}" required />
-                </div>
-                <div class="form-group">
-                    <label>終了時刻</label>
-                    <input type="datetime-local" th:field="*{endTime}" required />
-                </div>
-                <button type="submit">予約登録</button>
-            </form>
+        <div class="info-box">
+            💡 カレンダーから予約を作成してください。自分の予約をクリックすると編集できます。
         </div>
 
-        <h2>予約一覧</h2>
+        <h2 th:if="${isAdmin}">全ての予約一覧</h2>
+        <h2 th:if="${!isAdmin}">マイ予約一覧</h2>
+        
+        <!-- 予約が空の場合 -->
+        <div class="empty-message" th:if="${#lists.isEmpty(reservations)}">
+            <p th:if="${isAdmin}">予約がありません。</p>
+            <p th:if="${!isAdmin}">
+                まだ予約がありません。<br>
+                <a th:href="@{/calendar/studio}" style="color: #667eea; text-decoration: none; font-weight: 600;">カレンダーから予約</a>してください。
+            </p>
+        </div>
         
         <!-- スマホ用：カード形式 -->
         <div class="reservation-card" th:each="r : ${reservations}">
@@ -278,7 +235,7 @@
         </div>
         
         <!-- デスクトップ用：テーブル形式 -->
-        <div class="table-container">
+        <div class="table-container" th:if="${!#lists.isEmpty(reservations)}">
             <table>
                 <thead>
                     <tr>

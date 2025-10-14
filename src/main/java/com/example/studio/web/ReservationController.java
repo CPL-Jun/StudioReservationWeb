@@ -39,18 +39,25 @@ public class ReservationController {
 
     @GetMapping("/manage")
     public String manage(Model model) {
-        model.addAttribute("reservations", repo.findAll());
-        model.addAttribute("profiles", profileRepo.findAll());
-        
-        List<AppUser> users = appUserRepo.findAll();
-        model.addAttribute("users", users);
-        
         AppUser currentUser = userService.getCurrentUser();
-        Reservation reservation = new Reservation();
-        if (currentUser != null) {
-            reservation.setName(currentUser.getDisplayName());
+        boolean isAdmin = userService.isCurrentUserAdmin();
+        
+        List<Reservation> reservations;
+        if (isAdmin) {
+            // 管理者：全予約を表示
+            reservations = repo.findAll();
+        } else if (currentUser != null) {
+            // 一般ユーザー：自分の予約のみ表示
+            reservations = repo.findAll().stream()
+                .filter(r -> r.getName().equals(currentUser.getDisplayName()))
+                .toList();
+        } else {
+            reservations = List.of();
         }
-        model.addAttribute("reservation", reservation);
+        
+        model.addAttribute("reservations", reservations);
+        model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("currentUserName", currentUser != null ? currentUser.getDisplayName() : "");
         
         return "reservations";
     }
@@ -101,6 +108,11 @@ public class ReservationController {
         if (currentUser != null) {
             model.addAttribute("currentUserName", currentUser.getDisplayName());
         }
+        
+        // 全ユーザーのリストを追加
+        List<AppUser> users = appUserRepo.findAll();
+        model.addAttribute("users", users);
+        
         return "calendar-studio";
     }
 
@@ -265,16 +277,39 @@ public class ReservationController {
      * タイムゾーン情報を含む日時文字列をLocalDateTimeにパース
      */
     private LocalDateTime parseDateTime(String dateTimeStr) {
-        if (dateTimeStr == null) {
+        if (dateTimeStr == null || dateTimeStr.isEmpty()) {
             return null;
         }
-        // タイムゾーン情報（+09:00など）を削除
-        if (dateTimeStr.contains("+")) {
-            dateTimeStr = dateTimeStr.substring(0, dateTimeStr.indexOf('+'));
-        } else if (dateTimeStr.contains("Z")) {
-            dateTimeStr = dateTimeStr.substring(0, dateTimeStr.indexOf('Z'));
+        
+        try {
+            // タイムゾーン情報（+09:00、-05:00など）を削除
+            String cleanStr = dateTimeStr;
+            
+            // "+"または"-"の後にタイムゾーン情報がある場合
+            int plusIndex = dateTimeStr.lastIndexOf('+');
+            int minusIndex = dateTimeStr.lastIndexOf('-');
+            
+            // 日付部分の"-"と区別するため、"T"の後にある"-"のみを対象
+            if (dateTimeStr.contains("T")) {
+                int tIndex = dateTimeStr.indexOf('T');
+                if (minusIndex > tIndex) {
+                    cleanStr = dateTimeStr.substring(0, minusIndex);
+                } else if (plusIndex > 0) {
+                    cleanStr = dateTimeStr.substring(0, plusIndex);
+                }
+            }
+            
+            // "Z"（UTC）がある場合も削除
+            if (cleanStr.endsWith("Z")) {
+                cleanStr = cleanStr.substring(0, cleanStr.length() - 1);
+            }
+            
+            return LocalDateTime.parse(cleanStr);
+        } catch (Exception e) {
+            System.err.println("日時パースエラー: " + dateTimeStr);
+            e.printStackTrace();
+            throw new RuntimeException("日時のパースに失敗しました: " + dateTimeStr, e);
         }
-        return LocalDateTime.parse(dateTimeStr);
     }
 
     @DeleteMapping("/api/events/{id}")
