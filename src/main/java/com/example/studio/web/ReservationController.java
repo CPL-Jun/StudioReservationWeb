@@ -96,12 +96,22 @@ public class ReservationController {
     }
 
     @GetMapping("/calendar/studio")
-    public String calendarStudio() {
+    public String calendarStudio(Model model) {
+        AppUser currentUser = userService.getCurrentUser();
+        if (currentUser != null) {
+            model.addAttribute("currentUserName", currentUser.getDisplayName());
+        }
         return "calendar-studio";
     }
 
     @GetMapping("/calendar/roxette")
-    public String calendarRoxette() {
+    public String calendarRoxette(Model model) {
+        AppUser currentUser = userService.getCurrentUser();
+        if (currentUser != null) {
+            model.addAttribute("currentUserName", currentUser.getDisplayName());
+        }
+        boolean isAdmin = userService.isCurrentUserAdmin();
+        model.addAttribute("isAdmin", isAdmin);
         return "calendar-roxette";
     }
 
@@ -169,8 +179,12 @@ public class ReservationController {
         Reservation reservation = new Reservation();
         reservation.setRoom((String) payload.get("resourceId"));
         reservation.setName((String) payload.get("name"));
-        reservation.setStartTime(LocalDateTime.parse((String) payload.get("start")));
-        reservation.setEndTime(LocalDateTime.parse((String) payload.get("end")));
+        
+        // タイムゾーン情報を削除してパース
+        String startStr = (String) payload.get("start");
+        String endStr = (String) payload.get("end");
+        reservation.setStartTime(parseDateTime(startStr));
+        reservation.setEndTime(parseDateTime(endStr));
         reservation.setVenue(getVenueFromRoom((String) payload.get("resourceId")));
         
         // 枠作成の場合
@@ -209,10 +223,10 @@ public class ReservationController {
         Reservation reservation = repo.findById(id);
         if (reservation != null) {
             if (payload.containsKey("start")) {
-                reservation.setStartTime(LocalDateTime.parse((String) payload.get("start")));
+                reservation.setStartTime(parseDateTime((String) payload.get("start")));
             }
             if (payload.containsKey("end")) {
-                reservation.setEndTime(LocalDateTime.parse((String) payload.get("end")));
+                reservation.setEndTime(parseDateTime((String) payload.get("end")));
             }
             
             if (payload.containsKey("resourceId")) {
@@ -245,6 +259,22 @@ public class ReservationController {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "ok");
         return response;
+    }
+    
+    /**
+     * タイムゾーン情報を含む日時文字列をLocalDateTimeにパース
+     */
+    private LocalDateTime parseDateTime(String dateTimeStr) {
+        if (dateTimeStr == null) {
+            return null;
+        }
+        // タイムゾーン情報（+09:00など）を削除
+        if (dateTimeStr.contains("+")) {
+            dateTimeStr = dateTimeStr.substring(0, dateTimeStr.indexOf('+'));
+        } else if (dateTimeStr.contains("Z")) {
+            dateTimeStr = dateTimeStr.substring(0, dateTimeStr.indexOf('Z'));
+        }
+        return LocalDateTime.parse(dateTimeStr);
     }
 
     @DeleteMapping("/api/events/{id}")
